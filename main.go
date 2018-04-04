@@ -2,7 +2,6 @@ package main
 import (
     "log"
     "os"
-    "time"
     "github.com/yanzay/tbot"
 )
 
@@ -14,8 +13,6 @@ func main() {
         log.Fatal(err)
     }
     
-    whitelist := []string{"voroncov"}
-    bot.AddMiddleware(tbot.NewAuth(whitelist))
     bot.HandleDefault(welcomeHandler)
     bot.HandleFunc("ICO Status", ICOStatus)
     bot.ListenAndServe()
