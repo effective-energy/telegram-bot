@@ -5,7 +5,13 @@ import (
     "github.com/yanzay/tbot"
 )
 
-var bountyStep int = 0
+//System data
+var selectedLanguage string = ""
+
+//User data
+var userTwitterNickName string = ""
+var userTelegramNickName string = ""
+var userEthereumAddress string = ""
 
 func main() {
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
@@ -13,18 +19,51 @@ func main() {
         log.Fatal(err)
     }
     
-    bot.HandleDefault(welcomeHandler)
-    bot.HandleFunc("ICO Status", ICOStatus)
+    bot.HandleDefault(WelcomeHandler)
+
+    bot.HandleFunc("English", EnglishLanguageHandler)
+    bot.HandleFunc("Русский", RussianLanguageHandler)
+
+    bot.HandleFunc("ICO status", IcoStatusEngHandler)
+    bot.HandleFunc("Статус ICO", IcoStatusRusHandler)
+
+
     bot.ListenAndServe()
 }
 
-func ICOStatus(message *tbot.Message) {
-  message.Replyf("There is active development and marketing. Expect new news.")
+func IcoStatusEngHandler(message *tbot.Message) {
+    message.Replyf("The project is in active development")
 }
 
-func welcomeHandler(message *tbot.Message) {
+func IcoStatusRusHandler(message *tbot.Message) {
+    message.Replyf("Проект в активной разработке")
+}
+
+func EnglishLanguageHandler(message *tbot.Message) {
+    selectedLanguage = "Eng"
     buttons := [][]string{
-        {"ICO Status"},
+        {"ICO status"},
     }
-    message.ReplyKeyboard("Welcome to Alehub bounty bot!", buttons)
+    message.ReplyKeyboard("You select English lang", buttons)
+}
+
+func RussianLanguageHandler(message *tbot.Message) {
+    selectedLanguage = "Rus"
+    buttons := [][]string{
+        {"Статус ICO"},
+    }
+    message.ReplyKeyboard("Вы выбрали русский язык", buttons)
+}
+
+func WelcomeHandler(message *tbot.Message) {
+    if selectedLanguage == "" {
+        buttons := [][]string{
+            {"English", "Русский"},
+        }
+        message.ReplyKeyboard("Welcome, "+message.From.FirstName+"! Please, select language", buttons)
+    } else if selectedLanguage == "Eng" {
+        message.Replyf(message.From.FirstName+", have a good day!")
+    } else if selectedLanguage == "Rus" {
+        message.Replyf(message.From.FirstName+", удачного дня!")
+    }
 }
