@@ -1,11 +1,37 @@
 {
 	"en": {
+		"twitter": {
 
+		},
+		"telegram": {
+
+		},
+		"ethereum": {
+
+		},
+		"success": {
+
+		},
+		"alreadyJoin": {
+			
+		}
 	},
 	"ru": {
 
 	},
 	"ch": {
 		
+	},
+	"de": {
+
+	},
+	"ec": {
+
+	},
+	"kr": {
+
+	},
+	"jp": {
+
 	}
 }

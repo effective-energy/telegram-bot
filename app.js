@@ -5,6 +5,8 @@ const Stage = require('telegraf/stage');
 const Markup = require('telegraf/markup');
 const WizardScene = require('telegraf/scenes/wizard');
 
+const https = require('https');
+
 const bot = new Telegraf("");
 
 let bountyData = {
@@ -77,30 +79,25 @@ const superWizard = new WizardScene('super-wizard',
   	
   },
   (ctx) => {
+    bountyData.twitterNickName = ctx.update.message.text
   	ctx.reply('Join to alehub telegram chat @alehub \nEnter your telegram nuckname without @')
   	return ctx.wizard.next()
   },
   (ctx) => {
-
- //  	bot.telegram.getChatMember(ctx.message.chat.id, ctx.user.id).then((result) => {
-	//   console.log('result', result)
-	// })
-
+    bountyData.telegramNickName = ctx.update.message.text
     ctx.reply('Enter your ERC-20 ethereum wallet address')
     return ctx.wizard.next()
   },
   (ctx) => {
   	if(isAddress(ctx.update.message.text)) {
+      bountyData.ethAddress = ctx.update.message.text
+      bountyData.userId = ctx.update.message.from.id
 
   		fs.readFile('./members.json', 'utf-8', function(err, data) {
   			if (err) throw err
 
   			var arrayOfObjects = JSON.parse(data)
-  			arrayOfObjects.members.push({
-  				userId: ctx.update.message.from.id,
-  				name: "Test",
-  				age: 24
-  			})
+  			arrayOfObjects.members.push(bountyData)
 
   			fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
 				if (err) throw err
