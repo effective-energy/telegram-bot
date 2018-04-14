@@ -5,15 +5,13 @@ const Stage = require('telegraf/stage');
 const Markup = require('telegraf/markup');
 const WizardScene = require('telegraf/scenes/wizard');
 
-const https = require('https');
-
 const bot = new Telegraf("");
 
 let bountyData = {
-	userId: '',
-	twitterNickName: '',
-	telegramNickName: '',
-	ethAddress: ''
+  userId: '',
+  twitterNickName: '',
+  telegramNickName: '',
+  ethAddress: ''
 }
 
 var fs = require('fs')
@@ -55,33 +53,32 @@ const stepHandler = new Composer();
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
+    fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) throw err
 
-  	fs.readFile('./members.json', 'utf-8', function(err, data) {
-		if (err) throw err
+    let membersList = JSON.parse(data)
 
-		let membersList = JSON.parse(data)
+    let searchUserFromFile = ""
 
-		let searchUserFromFile = ""
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.userId === ctx.update.message.from.id)
+    }
 
-		if(membersList.members.length !== 0) {
-			searchUserFromFile = membersList.members.find(user => user.userId === ctx.update.message.from.id)
-		}
-
-		if(searchUserFromFile.length === 0) {
-			ctx.reply('For join to bounty: \n 1. Follow our from twitter https://twitter.com/alehub_io \n 2. Enter your nickname without @ \n 3. Send Next button', Markup.inlineKeyboard([
-				Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
-				]))
-			return ctx.wizard.next()
-		} else {
-			ctx.reply(`Your name - ${searchUserFromFile.name}`)
-		}
-	})
-  	
+    if(searchUserFromFile.length === 0) {
+      ctx.reply('For join to bounty: follow our from twitter https://twitter.com/alehub_io and enter your nickname without @', Markup.inlineKeyboard([
+        Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
+        ]))
+      return ctx.wizard.next()
+    } else {
+      ctx.reply(`Your twitter nickname - @${searchUserFromFile.twitterNickName}\n\nYour telegram nickname - @${searchUserFromFile.telegramNickName}\n\nYour eth address - ${searchUserFromFile.ethAddress}`)
+    }
+  })
+    
   },
   (ctx) => {
     bountyData.twitterNickName = ctx.update.message.text
-  	ctx.reply('Join to alehub telegram chat @alehub \nEnter your telegram nuckname without @')
-  	return ctx.wizard.next()
+    ctx.reply('Join to alehub telegram chat @alehub \nEnter your telegram nuckname without @')
+    return ctx.wizard.next()
   },
   (ctx) => {
     bountyData.telegramNickName = ctx.update.message.text
@@ -89,27 +86,27 @@ const superWizard = new WizardScene('super-wizard',
     return ctx.wizard.next()
   },
   (ctx) => {
-  	if(isAddress(ctx.update.message.text)) {
+    if(isAddress(ctx.update.message.text)) {
       bountyData.ethAddress = ctx.update.message.text
       bountyData.userId = ctx.update.message.from.id
 
-  		fs.readFile('./members.json', 'utf-8', function(err, data) {
-  			if (err) throw err
+      fs.readFile('./members.json', 'utf-8', function(err, data) {
+        if (err) throw err
 
-  			var arrayOfObjects = JSON.parse(data)
-  			arrayOfObjects.members.push(bountyData)
+        var arrayOfObjects = JSON.parse(data)
+        arrayOfObjects.members.push(bountyData)
 
-  			fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
-				if (err) throw err
-				ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token');
-				return ctx.scene.leave()
-			})
-  		})
+        fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
+        if (err) throw err
+        ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token');
+        return ctx.scene.leave()
+      })
+      })
 
-    	
-  	} else {
-  		ctx.reply('Enter correct ERC-20 wallet address')
-  	}
+      
+    } else {
+      ctx.reply('Enter correct ERC-20 wallet address')
+    }
   }
 )
 
