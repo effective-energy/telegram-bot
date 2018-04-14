@@ -84,6 +84,9 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
+    if(ctx.update.message.text.split('/start ')[1] !== undefined) {
+      console.log('is referal')
+    }
     ctx.reply('Select language', Markup.keyboard([
       Markup.callbackButton('English', 'next'),
       Markup.callbackButton('Russian', 'next'),
