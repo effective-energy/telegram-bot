@@ -7,11 +7,14 @@ const WizardScene = require('telegraf/scenes/wizard');
 
 const bot = new Telegraf("");
 
+var translate = require('./translate.json');
+
 let bountyData = {
-  userId: '',
+  telegramUserId: '',
   twitterNickName: '',
   telegramNickName: '',
-  ethAddress: ''
+  ethAddress: '',
+  selectedLanguage: ''
 }
 
 var fs = require('fs')
@@ -49,10 +52,76 @@ function isChecksumAddress (address) {
     return true;
 };
 
-const stepHandler = new Composer();
+const stepHandler = new Composer()
+
+stepHandler.action('next', (ctx) => {
+  ctx.telegram.getChatMember(73679622, ctx.update.callback_query.from.id).then(result => {
+    if(result.status !== 'member') {
+      ctx.reply('You did not join the group!')
+    } else {
+      bountyData.telegramNickName = ctx.update.callback_query.from.username
+      ctx.reply('Enter your ERC-20 ethereum wallet address')
+      return ctx.wizard.next()
+    }
+  }).catch(err => {
+    ctx.reply('You did not join the group!!')
+  })
+})
+stepHandler.command('next', (ctx) => {
+  ctx.telegram.getChatMember(73679622, ctx.update.message.from.id).then(result => {
+    if(result.user.status !== 'member') {
+      ctx.reply('You did not join the group!')
+    } else {
+      bountyData.telegramNickName = ctx.update.message.from.username
+      ctx.reply('Enter your ERC-20 ethereum wallet address')
+      return ctx.wizard.next()
+    }
+  }).catch(err => {
+    ctx.reply('You did not join the group!')
+  })
+})
+stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /next'))
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
+    ctx.reply('Select language', Markup.keyboard([
+      Markup.callbackButton('English', 'next'),
+      Markup.callbackButton('Russian', 'next'),
+      Markup.callbackButton('Chinese', 'next'),
+      Markup.callbackButton('German', 'next'),
+      Markup.callbackButton('Spanish', 'next'),
+      Markup.callbackButton('Korean', 'next'),
+      Markup.callbackButton('Japanese', 'next')
+    ]).oneTime().resize().extra())
+    return ctx.wizard.next()
+  },
+  (ctx) => {
+
+    switch (ctx.update.message.text) {
+      case 'English':
+        bountyData.selectedLanguage = 'en'
+        break;
+      case 'Russian':
+        bountyData.selectedLanguage = 'ru'
+        break;
+      case 'Chinese':
+        bountyData.selectedLanguage = 'ch'
+        break;
+      case 'German':
+        bountyData.selectedLanguage = 'de'
+        break;
+      case 'Spanish':
+        bountyData.selectedLanguage = 'ec'
+        break;
+      case 'Korean':
+        bountyData.selectedLanguage = 'kr'
+        break;
+      case 'Japanese':
+        bountyData.selectedLanguage = 'jp'
+        break;
+      default:
+        bountyData.selectedLanguage = 'en'
+    }
     fs.readFile('./members.json', 'utf-8', function(err, data) {
     if (err) throw err
 
@@ -61,11 +130,11 @@ const superWizard = new WizardScene('super-wizard',
     let searchUserFromFile = ""
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.userId === ctx.update.message.from.id)
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
     }
 
     if(searchUserFromFile.length === 0) {
-      ctx.reply('For join to bounty: follow our from twitter https://twitter.com/alehub_io and enter your nickname without @', Markup.inlineKeyboard([
+      ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io and enter your nickname without @`, Markup.inlineKeyboard([
         Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
         ]))
       return ctx.wizard.next()
@@ -77,18 +146,17 @@ const superWizard = new WizardScene('super-wizard',
   },
   (ctx) => {
     bountyData.twitterNickName = ctx.update.message.text
-    ctx.reply('Join to alehub telegram chat @alehub \nEnter your telegram nuckname without @')
+    ctx.reply('Join to alehub telegram chat @alehub and click /next button', Markup.inlineKeyboard([
+      Markup.urlButton('Join to group', 'https://t.me/alehub'),
+      Markup.callbackButton('➡️ Next', 'next')
+    ]).extra())
     return ctx.wizard.next()
   },
-  (ctx) => {
-    bountyData.telegramNickName = ctx.update.message.text
-    ctx.reply('Enter your ERC-20 ethereum wallet address')
-    return ctx.wizard.next()
-  },
+  stepHandler,
   (ctx) => {
     if(isAddress(ctx.update.message.text)) {
       bountyData.ethAddress = ctx.update.message.text
-      bountyData.userId = ctx.update.message.from.id
+      bountyData.telegramUserId = ctx.update.message.from.id
 
       fs.readFile('./members.json', 'utf-8', function(err, data) {
         if (err) throw err

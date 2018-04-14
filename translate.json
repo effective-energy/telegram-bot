@@ -1,7 +1,7 @@
 {
 	"en": {
 		"twitter": {
-
+			"title": "For join to bounty: follow our from twitter"
 		},
 		"telegram": {
 
@@ -17,21 +17,33 @@
 		}
 	},
 	"ru": {
-
+		"twitter": {
+			"title": "Для присоединения к щедрости: следуйте за нами из twitter"
+		}
 	},
 	"ch": {
-		
+		"twitter": {
+			"title": "加入賞金：按照我們的Twitter"
+		}
 	},
 	"de": {
-
+		"twitter": {
+			"title": "Für Join to Bounty: folgen Sie unserem von Twitter"
+		}
 	},
 	"ec": {
-
+		"twitter": {
+			"title": "Para unirse a la generosidad: seguir nuestro de twitter"
+		}
 	},
 	"kr": {
-
+		"twitter": {
+			"title": "현상금에 가입 : twitter에서 우리를 따르십시오"
+		}
 	},
 	"jp": {
-
+		"twitter": {
+			"title": "賞金への参加：twitterから私たちに従ってください"
+		}
 	}
 }
