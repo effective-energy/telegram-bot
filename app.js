@@ -4,22 +4,23 @@ const session = require('telegraf/session');
 const Stage = require('telegraf/stage');
 const Markup = require('telegraf/markup');
 const WizardScene = require('telegraf/scenes/wizard');
-
+const fs = require('fs');
 const bot = new Telegraf("");
-
-var translate = require('./translate.json');
+const translate = require('./translate.json');
+const SHA3 = require('crypto-js/sha3');
 
 let bountyData = {
   telegramUserId: '',
   twitterNickName: '',
   telegramNickName: '',
   ethAddress: '',
-  selectedLanguage: ''
+  selectedLanguage: '',
+  referalMembers: []
 }
 
-var fs = require('fs')
+let referalId = 0;
 
-let SHA3 = require('crypto-js/sha3');
+let totalTokensForBounty = 2200000; //2.2m
 
 let sha3 = (value) => {
   return SHA3(value, {
@@ -52,11 +53,32 @@ function isChecksumAddress (address) {
     return true;
 };
 
+bot.hears('My referals', (ctx) => {
+  ctx.reply('My referals', Markup.keyboard([
+    ['Balance', 'My referals'],
+    ['About ICO']
+  ]).oneTime().resize().extra())
+});
+
+bot.hears('Balance', (ctx) => {
+  ctx.reply('Balance', Markup.keyboard([
+    ['Balance', 'My referals'],
+    ['About ICO']
+  ]).oneTime().resize().extra())
+});
+
+bot.hears('About ICO', (ctx) => {
+  ctx.reply('About ICO', Markup.keyboard([
+    ['Balance', 'My referals'],
+    ['About ICO']
+  ]).oneTime().resize().extra())
+});
+
 const stepHandler = new Composer()
 
 stepHandler.action('next', (ctx) => {
-  ctx.telegram.getChatMember(73679622, ctx.update.callback_query.from.id).then(result => {
-    if(result.status !== 'member') {
+  ctx.telegram.getChatMember(-1001335559714, ctx.update.callback_query.from.id).then(result => {
+    if(result.status !== 'member' && result.status !== 'creator') {
       ctx.reply('You did not join the group!')
     } else {
       bountyData.telegramNickName = ctx.update.callback_query.from.username
@@ -68,8 +90,8 @@ stepHandler.action('next', (ctx) => {
   })
 })
 stepHandler.command('next', (ctx) => {
-  ctx.telegram.getChatMember(73679622, ctx.update.message.from.id).then(result => {
-    if(result.user.status !== 'member') {
+  ctx.telegram.getChatMember(-1001335559714, ctx.update.message.from.id).then(result => {
+    if(result.user.status !== 'member' && result.user.status !== 'creator') {
       ctx.reply('You did not join the group!')
     } else {
       bountyData.telegramNickName = ctx.update.message.from.username
@@ -85,23 +107,42 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
     if(ctx.update.message.text.split('/start ')[1] !== undefined) {
-      console.log('is referal')
+      referalId = Number(ctx.update.message.text.split('/start ')[1])
     }
-    ctx.reply('Select language', Markup.keyboard([
-      Markup.callbackButton('English', 'next'),
-      Markup.callbackButton('Russian', 'next'),
-      Markup.callbackButton('Chinese', 'next'),
-      Markup.callbackButton('German', 'next'),
-      Markup.callbackButton('Spanish', 'next'),
-      Markup.callbackButton('Korean', 'next'),
-      Markup.callbackButton('Japanese', 'next')
-    ]).oneTime().resize().extra())
-    return ctx.wizard.next()
+
+    fs.readFile('./members.json', 'utf-8', function(err, data) {
+      if (err) throw err
+
+      let membersList = JSON.parse(data)
+
+      let searchUserFromFile = ""
+
+      if(membersList.members.length !== 0) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
+
+      if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+        ctx.reply('Select language', Markup.keyboard([
+          Markup.callbackButton('English (default)', 'next'),
+          Markup.callbackButton('Russian', 'next'),
+          Markup.callbackButton('Chinese', 'next'),
+          Markup.callbackButton('German', 'next'),
+          Markup.callbackButton('Spanish', 'next'),
+          Markup.callbackButton('Korean', 'next'),
+          Markup.callbackButton('Japanese', 'next')
+        ]).oneTime().resize().extra())
+        return ctx.wizard.next()
+      } else {
+        ctx.reply(`Your twitter nickname - @${searchUserFromFile.twitterNickName}\n\nYour telegram nickname - @${searchUserFromFile.telegramNickName}\n\nYour eth address - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+          ['Balance', 'My referals'],
+          ['About ICO']
+        ]).oneTime().resize().extra())
+      }
+    })
   },
   (ctx) => {
-
     switch (ctx.update.message.text) {
-      case 'English':
+      case 'English (default)':
         bountyData.selectedLanguage = 'en'
         break;
       case 'Russian':
@@ -125,29 +166,16 @@ const superWizard = new WizardScene('super-wizard',
       default:
         bountyData.selectedLanguage = 'en'
     }
-    fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) throw err
-
-    let membersList = JSON.parse(data)
-
-    let searchUserFromFile = ""
-
-    if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-    }
-
-    if(searchUserFromFile.length === 0) {
-      ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io and enter your nickname without @`, Markup.inlineKeyboard([
+    ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io and enter your nickname without @`, Markup.inlineKeyboard([
         Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
         ]))
       return ctx.wizard.next()
-    } else {
-      ctx.reply(`Your twitter nickname - @${searchUserFromFile.twitterNickName}\n\nYour telegram nickname - @${searchUserFromFile.telegramNickName}\n\nYour eth address - ${searchUserFromFile.ethAddress}`)
-    }
-  })
     
   },
   (ctx) => {
+    if(bountyData.selectedLanguage.length === 0) {
+      return ctx.scene.back()
+    }
     bountyData.twitterNickName = ctx.update.message.text
     ctx.reply('Join to alehub telegram chat @alehub and click /next button', Markup.inlineKeyboard([
       Markup.urlButton('Join to group', 'https://t.me/alehub'),
@@ -167,11 +195,20 @@ const superWizard = new WizardScene('super-wizard',
         var arrayOfObjects = JSON.parse(data)
         arrayOfObjects.members.push(bountyData)
 
+        arrayOfObjects.members.filter(member => {
+          if(Number(member.telegramUserId) === Number(referalId)) {
+            member.referalMembers.push(bountyData)
+          }
+        })
+
         fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
-        if (err) throw err
-        ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token');
-        return ctx.scene.leave()
-      })
+          if (err) throw err
+          ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token', Markup.keyboard([
+            ['Balance', 'My referals'],
+            ['About ICO']
+          ]).oneTime().resize().extra())
+          return ctx.scene.leave()
+        })
       })
 
       
