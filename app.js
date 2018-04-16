@@ -188,11 +188,11 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
-    // console.log(ctx.update.message.text.indexOf('/start ') !== -1)
-    // console.log(Number(ctx.update.message.text.substr(7)))
-    // if(ctx.update.message.text.indexOf('/start ') !== -1) {
-    //   referalId = Number(ctx.update.message.text.substr(7))
-    // }
+    if(ctx.update.message.chat.type !== 'private') {
+      return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+    }
+
+    referalId = ctx.update.message.text
 
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
@@ -228,7 +228,7 @@ const superWizard = new WizardScene('super-wizard',
   },
   (ctx) => {
 
-    if(bountyData.selectedLanguage.length == 0) {
+    if(bountyData.selectedLanguage === '') {
       if(ctx.update.message.text.indexOf('English') !== -1) {
         bountyData.selectedLanguage = 'en'
         ctx.reply('English is selected', Markup.removeKeyboard().extra());
@@ -307,11 +307,18 @@ const superWizard = new WizardScene('super-wizard',
         var arrayOfObjects = JSON.parse(data)
         arrayOfObjects.members.push(bountyData)
 
-        arrayOfObjects.members.filter(member => {
-          if(Number(member.telegramUserId) === Number(referalId)) {
-            member.referalMembers.push(bountyData)
+        if(Number(referalId) !== 0) {
+          let checkisNotReferal = arrayOfObjects.members(item => {
+            return item.referalMembers.indexOf(Number(referalId)) !== -1
+          })
+          if(checkisNotReferal.length === 0) {
+            arrayOfObjects.members.filter(member => {
+              if(Number(member.telegramUserId) === Number(referalId)) {
+                member.referalMembers.push(bountyData.telegramUserId)
+              }
+            })
           }
-        })
+        }
 
         fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
           if (err) {
