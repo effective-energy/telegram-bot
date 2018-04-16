@@ -53,44 +53,17 @@ function isChecksumAddress (address) {
     return true;
 };
 
-bot.hears('Start again', (ctx) => {
-  ctx.reply('again')
-});
-
-bot.hears('Confirm data', (ctx) => {
-  fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) {
-      return reply('Bot error, write /start to start over')
-    }
-
-    var arrayOfObjects = JSON.parse(data)
-    arrayOfObjects.members.push(bountyData)
-
-    arrayOfObjects.members.filter(member => {
-      if(Number(member.telegramUserId) === Number(referalId)) {
-        member.referalMembers.push(bountyData)
-      }
-    })
-
-    fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
-      if (err) {
-        return reply('Bot error, write /start to start over')
-      }
-      return ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token', Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-    })
-  })
-});
-
 bot.hears('👥 My referals', (ctx) => {
 
   let totalReferals = 0;
 
+  let botLink = "https://t.me/alehubtest_bot?start";
+
+  ctx.reply(`Your referal link - ${botLink}=${ctx.update.message.from.id}`)
+
   fs.readFile('./members.json', 'utf-8', function(err, data) {
     if (err) {
-      return reply('Bot error, write /start to start over')
+      return ctx.reply('Bot error, write /start to start over')
     }
 
     let membersList = JSON.parse(data)
@@ -116,12 +89,12 @@ bot.hears('💰 Balance', (ctx) => {
 
   fs.readFile('./members.json', 'utf-8', function(err, data) {
     if (err) {
-      return reply('Bot error, write /start to start over')
+      return ctx.reply('Bot error, write /start to start over')
     }
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = ""
+    let searchUserFromFile = 0
 
     if(membersList.members.length !== 0) {
       searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
@@ -215,13 +188,15 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
-    if(ctx.update.message.text.split('/start ')[1] !== undefined) {
-      referalId = Number(ctx.update.message.text.split('/start ')[1])
-    }
+    // console.log(ctx.update.message.text.indexOf('/start ') !== -1)
+    // console.log(Number(ctx.update.message.text.substr(7)))
+    // if(ctx.update.message.text.indexOf('/start ') !== -1) {
+    //   referalId = Number(ctx.update.message.text.substr(7))
+    // }
 
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
-        return reply('Bot error, write /start to start over')
+        return ctx.reply('Bot error, write /start to start over')
       }
 
       let membersList = JSON.parse(data)
@@ -253,36 +228,38 @@ const superWizard = new WizardScene('super-wizard',
   },
   (ctx) => {
 
-    if(ctx.update.message.text.indexOf('English') !== -1) {
-      bountyData.selectedLanguage = 'en'
-      ctx.reply('English is selected', Markup.removeKeyboard().extra());
+    if(bountyData.selectedLanguage.length == 0) {
+      if(ctx.update.message.text.indexOf('English') !== -1) {
+        bountyData.selectedLanguage = 'en'
+        ctx.reply('English is selected', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('Russian') !== -1) {
-      bountyData.selectedLanguage = 'ru'
-      ctx.reply('Выбран русский язык', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('Russian') !== -1) {
+        bountyData.selectedLanguage = 'ru'
+        ctx.reply('Выбран русский язык', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('Chinese') !== -1) {
-      bountyData.selectedLanguage = 'ch'
-      ctx.reply('China is selected', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('Chinese') !== -1) {
+        bountyData.selectedLanguage = 'ch'
+        ctx.reply('China is selected', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('German') !== -1) {
-      bountyData.selectedLanguage = 'de'
-      ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('German') !== -1) {
+        bountyData.selectedLanguage = 'de'
+        ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('Spanish') !== -1) {
-      bountyData.selectedLanguage = 'ec'
-      ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('Spanish') !== -1) {
+        bountyData.selectedLanguage = 'ec'
+        ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('Korean') !== -1) {
-      bountyData.selectedLanguage = 'kr'
-      ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('Korean') !== -1) {
+        bountyData.selectedLanguage = 'kr'
+        ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
 
-    } else if(ctx.update.message.text.indexOf('Japanese') !== -1) {
-      bountyData.selectedLanguage = 'jp'
-      ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
+      } else if(ctx.update.message.text.indexOf('Japanese') !== -1) {
+        bountyData.selectedLanguage = 'jp'
+        ctx.reply('Germany is selected', Markup.removeKeyboard().extra());
 
-    } else {
-      return ctx.reply('Select language please')
+      } else {
+        return ctx.reply('Select language please')
+      }
     }
 
     ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io and enter your nickname without @`, Markup.inlineKeyboard([
@@ -309,14 +286,47 @@ const superWizard = new WizardScene('super-wizard',
       bountyData.ethAddress = ctx.update.message.text
       bountyData.telegramUserId = ctx.update.message.from.id
 
-      ctx.reply('Confirm the entered data or or click on "Start again" button')
+      ctx.reply('Confirm the entered data or or click on "Change data" button')
 
       ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
-          ['Confirm data', 'Start again']
+          Markup.callbackButton('Confirm data', 'next'),
+          Markup.callbackButton('Start over', 'next')
         ]).oneTime().resize().extra())
       return ctx.wizard.next()
     } else {
       ctx.reply('Enter correct ERC-20 wallet address')
+    }
+  },
+  (ctx) => {
+    if(ctx.update.message.text === 'Confirm data') {
+      fs.readFile('./members.json', 'utf-8', function(err, data) {
+        if (err) {
+          return ctx.reply('Bot error, write /start to start over')
+        }
+
+        var arrayOfObjects = JSON.parse(data)
+        arrayOfObjects.members.push(bountyData)
+
+        arrayOfObjects.members.filter(member => {
+          if(Number(member.telegramUserId) === Number(referalId)) {
+            member.referalMembers.push(bountyData)
+          }
+        })
+
+        fs.writeFile('./members.json', JSON.stringify(arrayOfObjects), 'utf-8', function(err) {
+          if (err) {
+            return ctx.reply('Bot error, write /start to start over')
+          }
+          ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token', Markup.keyboard([
+            ['💰 Balance', '👥 My referals'],
+            ['ℹ️ About Alehub']
+          ]).oneTime().resize().extra())
+          return ctx.scene.leave()
+        })
+      })
+    } else if(ctx.update.message.text === 'Start over') {
+      ctx.reply('Click /start')
+      return ctx.scene.leave()
     }
   }
 )
