@@ -1,7 +1,8 @@
 {
 	"en": {
 		"twitter": {
-			"title": "For join to bounty: follow our from twitter"
+			"title": "For join to bounty follow our from twitter",
+			"subtitle": "and enter your nickname without @"
 		},
 		"telegram": {
 
@@ -18,32 +19,38 @@
 	},
 	"ru": {
 		"twitter": {
-			"title": "Для присоединения к щедрости: следуйте за нами из twitter"
+			"title": "Для присоединения к баунти подпишитесь на нас в twitter",
+			"subtitle": "и напишите ваш ник без @"
 		}
 	},
 	"ch": {
 		"twitter": {
-			"title": "加入賞金：按照我們的Twitter"
+			"title": "加入賞金 按照我們的Twitter",
+			"subtitle": "and enter your nickname without @"
 		}
 	},
 	"de": {
 		"twitter": {
-			"title": "Für Join to Bounty: folgen Sie unserem von Twitter"
+			"title": "Für Join to Bounty folgen Sie unserem von Twitter",
+			"subtitle": "and enter your nickname without @"
 		}
 	},
 	"ec": {
 		"twitter": {
-			"title": "Para unirse a la generosidad: seguir nuestro de twitter"
+			"title": "Para unirse a la generosidad seguir nuestro de twitter",
+			"subtitle": "and enter your nickname without @"
 		}
 	},
 	"kr": {
 		"twitter": {
-			"title": "현상금에 가입 : twitter에서 우리를 따르십시오"
+			"title": "현상금에 가입 twitter에서 우리를 따르십시오",
+			"subtitle": "and enter your nickname without @"
 		}
 	},
 	"jp": {
 		"twitter": {
-			"title": "賞金への参加：twitterから私たちに従ってください"
+			"title": "賞金への参加 twitterから私たちに従ってください",
+			"subtitle": "and enter your nickname without @"
 		}
 	}
 }
