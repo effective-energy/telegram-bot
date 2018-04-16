@@ -232,12 +232,27 @@ const superWizard = new WizardScene('super-wizard',
     if(bountyData.selectedLanguage.length === 0) {
       return ctx.scene.back()
     }
-    bountyData.twitterNickName = ctx.update.message.text
-    ctx.reply('Join to alehub telegram chat @alehub and click /next button', Markup.inlineKeyboard([
-      Markup.urlButton('Join to group', 'https://t.me/alehub'),
-      Markup.callbackButton('➡️ Next', 'next')
-    ]).extra())
-    return ctx.wizard.next()
+
+
+    fs.readFile('./members.json', 'utf-8', function(err, data) {
+      if (err) {
+        return ctx.reply('Bot error, write /start to start over')
+      }
+      var arrayOfObjects = JSON.parse(data)
+      let checkIsNewTwitter = arrayOfObjects.members.filter(item => {
+        return item.twitterNickName === ctx.update.message.text
+      })
+      if(checkIsNewTwitter.length !== 0) {
+        ctx.reply('This Twitter nickname already exists')
+      } else {
+        bountyData.twitterNickName = ctx.update.message.text
+        ctx.reply('Join to alehub telegram chat @alehub and click /next button', Markup.inlineKeyboard([
+          Markup.urlButton('Join to group', 'https://t.me/alehub'),
+          Markup.callbackButton('➡️ Next', 'next')
+        ]).extra())
+        return ctx.wizard.next()
+      }
+    })
   },
   stepHandler,
   (ctx) => {
@@ -246,13 +261,26 @@ const superWizard = new WizardScene('super-wizard',
       bountyData.ethAddress = ctx.update.message.text
       bountyData.telegramUserId = ctx.update.message.from.id
 
-      ctx.reply('Confirm the entered data or or click on "Change data" button')
+      fs.readFile('./members.json', 'utf-8', function(err, data) {
+        if (err) {
+          return ctx.reply('Bot error, write /start to start over')
+        }
+        var arrayOfObjects = JSON.parse(data)
+        let checkIsNewAddress = arrayOfObjects.members.filter(item => {
+          return item.ethAddress === bountyData.ethAddress
+        })
+        if(checkIsNewAddress.length !== 0) {
+          ctx.reply('This Ethereum address already exists')
+        } else {
+          ctx.reply('Confirm the entered data or or click on "Change data" button')
 
-      ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
-          Markup.callbackButton('Confirm data', 'next'),
-          Markup.callbackButton('Start over', 'next')
-        ]).oneTime().resize().extra())
-      return ctx.wizard.next()
+          ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
+              Markup.callbackButton('Confirm data', 'next'),
+              Markup.callbackButton('Start over', 'next')
+            ]).oneTime().resize().extra())
+          return ctx.wizard.next()
+        }
+      })
     } else {
       ctx.reply('Enter correct ERC-20 wallet address')
     }
@@ -268,7 +296,7 @@ const superWizard = new WizardScene('super-wizard',
         arrayOfObjects.members.push(bountyData)
 
         if(Number(referalId) !== 0) {
-          let checkisNotReferal = arrayOfObjects.members(item => {
+          let checkisNotReferal = arrayOfObjects.members.filter(item => {
             return item.referalMembers.indexOf(Number(referalId)) !== -1
           })
           if(checkisNotReferal.length === 0) {
