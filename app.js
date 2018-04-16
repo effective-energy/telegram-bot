@@ -110,47 +110,7 @@ bot.hears('💰 Balance', (ctx) => {
 });
 
 bot.hears('ℹ️ About Alehub', (ctx) => {
-  ctx.reply(`
-    👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥
-
-    👥 ALEHUB COMMUNITY 👥
-
-    ✅ Telegram news channel: https://t.me/alehubnews
-    ✅ Website: https://alehub.io 
-    ✅ Github: https://goo.gl/GoELvP
-    ✅ Twitter: https://goo.gl/K212vC
-    ✅ Instagram https://goo.gl/zq72Tq
-    ✅ Facebook: https://goo.gl/oDW47a
-    ✅ Youtube: https://goo.gl/DUQyc1
-
-    👥  ⁉️ WHAT IS ALEHUB? 👥
-     
-    The ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level. 
-
-    On the one hand, they are programmers or their associations, and on the other hand, they are IT Customers. 
-
-    ALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).
-
-    👥 ALEHUB PARTNERS 👥
-
-    🤝 Serokell: https://goo.gl/v1fnyC
-    🤝 ITMO University: https://goo.gl/XPjeLg
-    🤝 Crypto b2b: https://goo.gl/HLUddx
-    🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb
-
-    👥 ALEHUB IN MEDIA 👥
-    📄 GOLOS: https://goo.gl/z3kNGP
-    📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1
-
-    For any inquiries please contact us:
-    📩 Marketing & PR: pr@alehub.io
-    📩 Support: support@alehub.io
-    📩 Bounty: bounty@alehub.io
-
-    🆕  Stay tuned for more upcoming news about ALEHUB!  🆕
-
-    👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥
-  `, Markup.keyboard([
+  ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
     ['ℹ️ About Alehub']
   ]).oneTime().resize().extra())
