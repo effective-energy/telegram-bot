@@ -88,7 +88,7 @@ bot.hears('👥 My referals', (ctx) => {
         ctx.reply(`Your referal link - ${botLink}=${ctx.update.message.from.id}`)
       }
 
-    ctx.reply(`You invited ${totalReferals} users for which you received ${totalReferals*10} ALE tokens`, Markup.keyboard([
+      ctx.reply(`You invited ${totalReferals} users for which you received ${totalReferals*10} ALE tokens`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
     ['ℹ️ About Alehub', '❓ FAQ']
   ]).oneTime().resize().extra())
@@ -123,14 +123,14 @@ bot.hears('💰 Balance', (ctx) => {
 });
 
 bot.hears('❓ FAQ', (ctx) => {
-  ctx.reply('FAQ', Markup.keyboard([
+  ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
     ['ℹ️ About Alehub', '❓ FAQ']
   ]).oneTime().resize().extra())
 });
 
 bot.hears('FAQ', (ctx) => {
-  ctx.reply('FAQ', Markup.keyboard([
+  ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
     ['About Alehub', 'FAQ']
   ]).oneTime().resize().extra())
 });
@@ -181,19 +181,19 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
-    if(ctx.update.callback_query !== undefined && ctx.update.callback_query.message.chat.type !== 'private') {
-      return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
-    } else if(ctx.update !== undefined && ctx.update.message.chat.type !== 'private') {
-      return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+    if(ctx.update.message.chat.type !== undefined) {
+      if(ctx.update.message.chat.type !== 'private') {
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+      } else {
+        referalId = Number(ctx.update.message.text.split('/start ')[1])
+      }
+    } else if(ctx.update.callback_query.message.chat.type !== undefined) {
+      if(ctx.update.callback_query.message.chat.type !== 'private') {
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+      } else {
+        referalId = Number(ctx.update.callback_query.message.text.split('/start ')[1])
+      }
     }
-
-    if(ctx.update.callback_query !== undefined) {
-      referalId = ctx.update.callback_query.message.text
-    } else if(ctx.update.message.chat.type !== undefined) {
-      referalId = ctx.update.message.text
-    }
-
-    referalId = ctx.update.message.text
 
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
@@ -322,31 +322,42 @@ const superWizard = new WizardScene('super-wizard',
   },
   stepHandler,
   (ctx) => {
-    if(isAddress(ctx.update.message.text)) {
+    if(ctx.update.message.text !== undefined || ctx.update.callback_query.message.text !== undefined) {
 
-      bountyData.ethAddress = ctx.update.message.text
-      bountyData.telegramUserId = ctx.update.message.from.id
+      let address = "";
+      if(ctx.update.message.text !== undefined) {
+        address = ctx.update.message.text
+      } else if(ctx.update.callback_query.message.text !== undefined) {
+        address = ctx.update.callback_query.message.text
+      }
 
-      fs.readFile('./members.json', 'utf-8', function(err, data) {
-        if (err) {
-          return ctx.reply('Bot error, write /start to start over')
-        }
-        var arrayOfObjects = JSON.parse(data)
-        let checkIsNewAddress = arrayOfObjects.members.filter(item => {
-          return item.ethAddress === bountyData.ethAddress
+      if(isAddress(address)) {
+        bountyData.ethAddress = ctx.update.message.text
+        bountyData.telegramUserId = ctx.update.message.from.id
+
+        fs.readFile('./members.json', 'utf-8', function(err, data) {
+          if (err) {
+            return ctx.reply('Bot error, write /start to start over')
+          }
+          var arrayOfObjects = JSON.parse(data)
+          let checkIsNewAddress = arrayOfObjects.members.filter(item => {
+            return item.ethAddress === bountyData.ethAddress
+          })
+          if(checkIsNewAddress.length !== 0) {
+            ctx.reply('This Ethereum address already exists')
+          } else {
+            ctx.reply('Confirm the entered data or or click on "Change data" button')
+
+            ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
+                Markup.callbackButton('Confirm data', 'next'),
+                Markup.callbackButton('Start over', 'next')
+              ]).oneTime().resize().extra())
+            return ctx.wizard.next()
+          }
         })
-        if(checkIsNewAddress.length !== 0) {
-          ctx.reply('This Ethereum address already exists')
-        } else {
-          ctx.reply('Confirm the entered data or or click on "Change data" button')
-
-          ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
-              Markup.callbackButton('Confirm data', 'next'),
-              Markup.callbackButton('Start over', 'next')
-            ]).oneTime().resize().extra())
-          return ctx.wizard.next()
-        }
-      })
+      } else {
+        ctx.reply('Enter correct ERC-20 wallet address')
+      }
     } else {
       ctx.reply('Enter correct ERC-20 wallet address')
     }
