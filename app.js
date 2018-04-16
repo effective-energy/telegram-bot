@@ -90,7 +90,7 @@ bot.hears('👥 My referals', (ctx) => {
 
     ctx.reply(`You invited ${totalReferals} users for which you received ${totalReferals*10} ALE tokens`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub']
+    ['ℹ️ About Alehub', '❓ FAQ']
   ]).oneTime().resize().extra())
 
   })
@@ -116,22 +116,35 @@ bot.hears('💰 Balance', (ctx) => {
 
     ctx.reply(`Your balance is ${totalBalance} ALE tokens`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub']
+    ['ℹ️ About Alehub', '❓ FAQ']
   ]).oneTime().resize().extra())
 
   })
 });
 
+bot.hears('❓ FAQ', (ctx) => {
+  ctx.reply('FAQ', Markup.keyboard([
+    ['💰 Balance', '👥 My referals'],
+    ['ℹ️ About Alehub', '❓ FAQ']
+  ]).oneTime().resize().extra())
+});
+
+bot.hears('FAQ', (ctx) => {
+  ctx.reply('FAQ', Markup.keyboard([
+    ['About Alehub', 'FAQ']
+  ]).oneTime().resize().extra())
+});
+
 bot.hears('ℹ️ About Alehub', (ctx) => {
   ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub']
+    ['ℹ️ About Alehub', '❓ FAQ']
   ]).oneTime().resize().extra())
 });
 
 bot.hears('About Alehub', (ctx) => {
   ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
-    ['About Alehub']
+    ['About Alehub', 'FAQ']
   ]).oneTime().resize().extra())
 });
 
@@ -167,8 +180,17 @@ stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /nex
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
-    if(ctx.update.message.chat.type !== 'private' && ctx.update.message.chat.type !== undefined) {
+
+    if(ctx.update.callback_query !== undefined && ctx.update.callback_query.message.chat.type !== 'private') {
       return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+    } else if(ctx.update !== undefined && ctx.update.message.chat.type !== 'private') {
+      return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+    }
+
+    if(ctx.update.callback_query !== undefined) {
+      referalId = ctx.update.callback_query.message.text
+    } else if(ctx.update.message.chat.type !== undefined) {
+      referalId = ctx.update.message.text
     }
 
     referalId = ctx.update.message.text
@@ -206,7 +228,7 @@ const superWizard = new WizardScene('super-wizard',
 
           if(totalUsersWithReferal >= totalTokensForBounty) {
             return ctx.reply('Bounty program is over', Markup.keyboard([
-                ['About Alehub']
+                ['About Alehub', 'FAQ']
               ]).oneTime().resize().extra())
           } else {
             ctx.reply('Select language', Markup.keyboard([
@@ -225,51 +247,51 @@ const superWizard = new WizardScene('super-wizard',
       } else {
         ctx.reply(`Your twitter nickname - @${searchUserFromFile.twitterNickName}\n\nYour telegram nickname - @${searchUserFromFile.telegramNickName}\n\nYour eth address - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
-          ['ℹ️ About Alehub']
+          ['ℹ️ About Alehub', '❓ FAQ']
         ]).oneTime().resize().extra())
       }
     })
   },
   (ctx) => {
 
-    if(bountyData.selectedLanguage === '') {
-      if(ctx.update.message.text.indexOf('English') !== -1) {
-        bountyData.selectedLanguage = 'en'
-        ctx.reply('🇺🇸 English language is selected', Markup.removeKeyboard().extra());
+    if(ctx.update.message.text.indexOf('English') !== -1) {
+      bountyData.selectedLanguage = 'en'
+      ctx.reply('🇺🇸 English language is selected', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('Russian') !== -1) {
-        bountyData.selectedLanguage = 'ru'
-        ctx.reply('🇷🇺 Выбран русский язык', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('Russian') !== -1) {
+      bountyData.selectedLanguage = 'ru'
+      ctx.reply('🇷🇺 Выбран русский язык', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('Chinese') !== -1) {
-        bountyData.selectedLanguage = 'ch'
-        ctx.reply('🇨🇳 中文被選中', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('Chinese') !== -1) {
+      bountyData.selectedLanguage = 'ch'
+      ctx.reply('🇨🇳 中文被選中', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('German') !== -1) {
-        bountyData.selectedLanguage = 'de'
-        ctx.reply('🇩🇪 Die deutsche Sprache ist ausgewählt', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('German') !== -1) {
+      bountyData.selectedLanguage = 'de'
+      ctx.reply('🇩🇪 Die deutsche Sprache ist ausgewählt', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('Spanish') !== -1) {
-        bountyData.selectedLanguage = 'ec'
-        ctx.reply('🇪🇸 El idioma español es seleccionado', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('Spanish') !== -1) {
+      bountyData.selectedLanguage = 'ec'
+      ctx.reply('🇪🇸 El idioma español es seleccionado', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('Korean') !== -1) {
-        bountyData.selectedLanguage = 'kr'
-        ctx.reply('🇰🇷 한국어가 선택되었습니다.', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('Korean') !== -1) {
+      bountyData.selectedLanguage = 'kr'
+      ctx.reply('🇰🇷 한국어가 선택되었습니다.', Markup.removeKeyboard().extra());
 
-      } else if(ctx.update.message.text.indexOf('Japanese') !== -1) {
-        bountyData.selectedLanguage = 'jp'
-        ctx.reply('🇯🇵 日本語が選択されている', Markup.removeKeyboard().extra());
+    } else if(ctx.update.message.text.indexOf('Japanese') !== -1) {
+      bountyData.selectedLanguage = 'jp'
+      ctx.reply('🇯🇵 日本語が選択されている', Markup.removeKeyboard().extra());
 
-      } else {
-        return ctx.reply('Select language please')
-      }
+    } else {
+      return ctx.reply('Select language please')
     }
 
-    ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io ${translate[bountyData.selectedLanguage].twitter.subtitle}`, Markup.inlineKeyboard([
+    setTimeout(function() {
+      ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io ${translate[bountyData.selectedLanguage].twitter.subtitle}`, Markup.inlineKeyboard([
         Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
         ]).oneTime().resize().extra())
       return ctx.wizard.next()
+    }, 300)
     
   },
   (ctx) => {
@@ -358,7 +380,7 @@ const superWizard = new WizardScene('super-wizard',
           }
           ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token', Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
-            ['ℹ️ About Alehub']
+            ['ℹ️ About Alehub', '❓ FAQ']
           ]).oneTime().resize().extra())
           return ctx.scene.leave()
         })
