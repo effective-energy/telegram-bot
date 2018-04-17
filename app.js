@@ -19,7 +19,7 @@ let bountyData = {
 }
 
 let referalId = 0;
-let botLink = "https://t.me/alehubtest_bot?start";
+let botLink = "https://t.me/alehub_bot?start";
 
 let totalTokensForBounty = 2200000; //2.2m
 
@@ -28,7 +28,6 @@ let sha3 = (value) => {
     outputLength: 256
   }).toString();
 }
-
 function isAddress (address) {
     if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
         return false;
@@ -62,8 +61,8 @@ stepHandler.action('next', (ctx) => {
     return ctx.reply('Enter correct twitter nickname')
   }
 
-  ctx.telegram.getChatMember(-1001335559714, ctx.update.callback_query.from.id).then(result => {
-    if(result.status !== 'member' && result.status !== 'creator') {
+  ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
+    if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
       ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
     } else {
       bountyData.telegramNickName = ctx.update.callback_query.from.username
@@ -78,8 +77,8 @@ stepHandler.command('next', (ctx) => {
   if(ctx.update.message.text === undefined) {
     return ctx.reply('Enter correct twitter nickname')
   }
-  ctx.telegram.getChatMember(-1001335559714, ctx.update.message.from.id).then(result => {
-    if(result.status !== 'member' && result.status !== 'creator') {
+  ctx.telegram.getChatMember(-1001173782659, ctx.update.message.from.id).then(result => {
+    if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
       ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
     } else {
       bountyData.telegramNickName = ctx.update.message.from.username
