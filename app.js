@@ -418,7 +418,7 @@ const superWizard = new WizardScene('super-wizard',
           if (err) {
             return ctx.reply('Bot error, write /start to start over')
           }
-          ctx.reply(`${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
+          ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
             ['💾 My info', '❓ FAQ'],
             ['ℹ️ About Alehub']
