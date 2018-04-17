@@ -76,7 +76,7 @@ bot.hears('💾 My info', (ctx) => {
   })
 });
 
-bot.hears('Total referall', (ctx) => {
+bot.hears('Total referal', (ctx) => {
   fs.readFile('./members.json', 'utf-8', function(err, data) {
     if (err) {
       return ctx.reply('Bot error, write /start to start over')
@@ -88,7 +88,7 @@ bot.hears('Total referall', (ctx) => {
     }
     bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
 
-    if(ctx.update.message.from.username === 'voroncov') {
+    if(ctx.update.message.from.username === 'voroncov' || ctx.update.message.from.username === 'EcoMayDom' || ctx.update.message.from.username === 'Mihall') {
 
       let membersCount = 0;
       let referalsCount = 0;
@@ -106,11 +106,11 @@ bot.hears('Total referall', (ctx) => {
         ['ℹ️ About Alehub']
       ]).oneTime().resize().extra())
     } else {
-      ctx.reply('Total referall', Markup.keyboard([
-          ['💰 Balance', '👥 My referals'],
-          ['💾 My info', '❓ FAQ'],
-          ['ℹ️ About Alehub']
-        ]).oneTime().resize().extra())
+      ctx.reply('Total referal', Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
     }
 
   })
@@ -149,7 +149,7 @@ bot.hears('👥 My referals', (ctx) => {
         ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
       } else {
         let botLink = "https://t.me/alehubtest_bot?start";
-        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`)
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalink} - ${botLink}=${ctx.update.message.from.id}`)
       }
 
       ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
@@ -353,7 +353,15 @@ const superWizard = new WizardScene('super-wizard',
       ctx.reply('🇯🇵 日本語が選択されている', Markup.removeKeyboard().extra());
 
     } else {
-      return ctx.reply('Select language please')
+      return ctx.reply('Select language please', Markup.keyboard([
+        Markup.callbackButton('🇺🇸 English', 'next'),
+        Markup.callbackButton('🇷🇺 Russian', 'next'),
+        Markup.callbackButton('🇨🇳 Chinese', 'next'),
+        Markup.callbackButton('🇩🇪 German', 'next'),
+        Markup.callbackButton('🇪🇸 Spanish', 'next'),
+        Markup.callbackButton('🇰🇷 Korean', 'next'),
+        Markup.callbackButton('🇯🇵 Japanese', 'next')
+      ]).oneTime().resize().extra())
     }
 
     setTimeout(function() {
