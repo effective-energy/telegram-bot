@@ -19,6 +19,7 @@ let bountyData = {
 }
 
 let referalId = 0;
+let botLink = "https://t.me/alehubtest_bot?start";
 
 let totalTokensForBounty = 2200000; //2.2m
 
@@ -78,7 +79,7 @@ stepHandler.command('next', (ctx) => {
     return ctx.reply('Enter correct twitter nickname')
   }
   ctx.telegram.getChatMember(-1001335559714, ctx.update.message.from.id).then(result => {
-    if(result.user.status !== 'member' && result.user.status !== 'creator') {
+    if(result.status !== 'member' && result.status !== 'creator') {
       ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
     } else {
       bountyData.telegramNickName = ctx.update.message.from.username
@@ -239,8 +240,13 @@ const superWizard = new WizardScene('super-wizard',
     }
 
     if(ctx.update.message.text === undefined) {
-      return ctx.reply('Enter correct twitter nickname')
+      return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
     }
+
+    if(ctx.update.message.text.substr(0, 1) === "/") {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
+    }
+
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
         return ctx.reply('Bot error, write /start to start over')
@@ -267,6 +273,17 @@ const superWizard = new WizardScene('super-wizard',
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
     }
     if(ctx.update.message.text !== undefined || ctx.update.callback_query.message.text !== undefined) {
+
+
+      if(ctx.update.message.text.indexOf('/start ') !== undefined) {
+        if(ctx.update.message.text.substr(0, 1) === "/") {
+          return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
+        }
+      } else if(ctx.update.callback_query.message.text.indexOf('/start ') !== undefined) {
+        if(ctx.update.callback_query.message.text.substr(0, 1) === "/") {
+          return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
+        }
+      }
 
       let address = "";
       if(ctx.update.message.text !== undefined) {
@@ -310,6 +327,11 @@ const superWizard = new WizardScene('super-wizard',
     if(ctx.update.message.text === undefined) {
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
     }
+
+    if(ctx.update.message.text.substr(0, 1) === "/") {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
+    }
+
     if(ctx.update.message.text === 'Confirm data') {
       fs.readFile('./members.json', 'utf-8', function(err, data) {
         if (err) {
@@ -347,6 +369,8 @@ const superWizard = new WizardScene('super-wizard',
     } else if(ctx.update.message.text === 'Start over') {
       ctx.reply(`${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
       return ctx.scene.leave()
+    } else {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
     }
   }
 )
@@ -533,24 +557,23 @@ superWizard.hears('👥 My referals', (ctx) => {
       let totalUsersWithReferal = 0;
 
       for(let i=0;i<membersList.members.length;i++) {
-          totalUsersWithReferal = totalUsersWithReferal+30;
-          for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
-            totalUsersWithReferal = totalUsersWithReferal+10;
-          }
+        totalUsersWithReferal = totalUsersWithReferal+30;
+        for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+          totalUsersWithReferal = totalUsersWithReferal+10;
         }
+      }
 
-        if(totalUsersWithReferal >= totalTokensForBounty) {
-          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
-        } else {
-          let botLink = "https://t.me/alehubtest_bot?start";
-          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`)
-        }
+      if(totalUsersWithReferal >= totalTokensForBounty) {
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
+      } else {
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`)
+      }
 
-        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
-          ['💰 Balance', '👥 My referals'],
-          ['💾 My info', '❓ FAQ'],
-          ['ℹ️ About Alehub']
-        ]).oneTime().resize().extra())
+      ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
     }
   })
 });
@@ -617,7 +640,7 @@ superWizard.command('/totalReferal', (ctx) => {
           ['ℹ️ About Alehub']
         ]).oneTime().resize().extra())
       } else {
-        ctx.reply('Total referal', Markup.keyboard([
+        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub']

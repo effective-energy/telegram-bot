@@ -3,7 +3,8 @@
 		"twitter": {
 			"title": "Follow our from twitter",
 			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"exist": "This Twitter nickname already exists",
+			"correct": "Enter correct twitter nickname"
 		},
 		"telegram": {
 			"notJoin": "You did not join the group!",
@@ -14,7 +15,7 @@
 		"ethereum": {
 			"exist": "This Ethereum address already exists",
 			"correct": "Enter correct ERC-20 address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"changeData": "Confirm the entered data or click on `Change data` button"
 		},
 		"success": {
 			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
@@ -53,7 +54,8 @@
 		"twitter": {
 			"title": "Подпишитесь на нас в twitter",
 			"subtitle": "и введите ваш никнейм без @",
-			"exist": "Этот twitter-никнейм уже активен"
+			"exist": "Этот twitter-никнейм уже активен",
+			"correct": "Введите правильный никнейм в twitter"
 		},
 		"telegram": {
 			"notJoin": "Вы не вступили в группу!",
@@ -103,7 +105,8 @@
 		"twitter": {
 			"title": "加入賞金跟隨我們從twitter",
 			"subtitle": "並輸入你的暱稱不用@",
-			"exist": "這個Twitter暱稱已經存在"
+			"exist": "這個Twitter暱稱已經存在",
+			"correct": "輸入正確的Twitter暱稱"
 		},
 		"telegram": {
 			"notJoin": "你沒加入團隊！",
@@ -153,7 +156,8 @@
 		"twitter": {
 			"title": "Für Join to Bounty folgen Sie unserem Twitter",
 			"subtitle": "und gib deinen Nickname ohne @ ein",
-			"exist": "Dieser Twitter-Nickname existiert bereits"
+			"exist": "Dieser Twitter-Nickname existiert bereits",
+			"correct": "Geben Sie den richtigen Twitter-Nicknamen ein"
 		},
 		"telegram": {
 			"notJoin": "Du bist der Gruppe nicht beigetreten!",
@@ -203,7 +207,8 @@
 		"twitter": {
 			"title": "Para unirse a generosidad siga nuestro de twitter",
 			"subtitle": "e ingrese su apodo sin @",
-			"exist": "Este apodo de Twitter ya existe"
+			"exist": "Este apodo de Twitter ya existe",
+			"correct": "Ingrese el apodo correcto de twitter"
 		},
 		"telegram": {
 			"notJoin": "¡No te uniste al grupo!",
@@ -253,7 +258,8 @@
 		"twitter": {
 			"title": "현상금에 가입하려면 twitter에서 우리를 따르십시오.",
 			"subtitle": "@없이 별명을 입력하십시오.",
-			"exist": "이 Twitter 닉네임이 이미 있습니다."
+			"exist": "이 Twitter 닉네임이 이미 있습니다.",
+			"correct": "올바른 트위터 닉네임을 입력하십시오."
 		},
 		"telegram": {
 			"notJoin": "당신은 그룹에 가입하지 않았습니다!",
@@ -303,7 +309,8 @@
 		"twitter": {
 			"title": "賞金に参加するには、twitterから私たちに従ってください",
 			"subtitle": "あなたのニックネームは@",
-			"exist": "このTwitterのニックネームは既に存在します"
+			"exist": "このTwitterのニックネームは既に存在します",
+			"correct": "正しいtwitterニックネームを入力してください"
 		},
 		"telegram": {
 			"notJoin": "あなたはグループに参加していません！",
