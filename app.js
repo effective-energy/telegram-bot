@@ -94,7 +94,7 @@ stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].tel
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
-    if(ctx.update.message.chat.type !== undefined) {
+    if(ctx.update !== undefined) {
       if(ctx.update.message.chat.type !== 'private') {
         return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
@@ -104,7 +104,7 @@ const superWizard = new WizardScene('super-wizard',
           }
         }
       }
-    } else if(ctx.update.callback_query.message.chat.type !== undefined) {
+    } else if(ctx.update.callback_query !== undefined) {
       if(ctx.update.callback_query.message.chat.type !== 'private') {
         return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
