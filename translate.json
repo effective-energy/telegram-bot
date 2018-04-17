@@ -1,19 +1,19 @@
 {
 	"en": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
+			"title": "Follow our from twitter",
 			"subtitle": "and enter your nickname without @",
 			"exist": "This Twitter nickname already exists"
 		},
 		"telegram": {
 			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
+			"ethAddress": "Enter your ERC-20 ethereum address",
 			"hint": "Press `Next` button or type /next",
 			"condition": "Join to alehub telegram chat @alehub and click /next button'"
 		},
 		"ethereum": {
 			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
+			"correct": "Enter correct ERC-20 address",
 			"changeData": "Confirm the entered data or or click on `Change data` button"
 		},
 		"success": {
@@ -27,12 +27,12 @@
 				"title": "Your telegram nickname"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "Your ethereum address"
 			}
 		},
 		"bounty": {
 			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"referalLink": "Your referral link",
 			"invite": {
 				"begin": "You invited",
 				"middle": "users for which you received",
@@ -40,9 +40,6 @@
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
 				"title": "Your balance is",
 				"subtitle": "ALE tokens"
@@ -54,320 +51,302 @@
 	},
 	"ru": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "Подпишитесь на нас в twitter",
+			"subtitle": "и введите ваш никнейм без @",
+			"exist": "Этот twitter-никнейм уже активен"
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "Вы не вступили в группу!",
+			"ethAddress": "Введите ваш ERC-20 ethereum адрес",
+			"hint": "Нажмите кнопку `Next` или напишите /next",
+			"condition": "Вступите в alehub чат @alehub и нажмите на кнопку /next'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "Этот Ethereum адрес уже активен",
+			"correct": "Введите корректный ERC-20 адрес",
+			"changeData": "Подтвердите введенные данные или нажмите на кнопку `Change data`"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "Вы успешно присоединились к баунти-программе! После ICO на вашем адресе появится 30 ALE токенов"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "Ваш twitter никнейм"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "Ваш telegram никнейм"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "Ваш ethereum адрес"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "Баунти-программа окончена",
+			"referalLink": "Ваша реферальная ссылка",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "Вы пригласили ",
+				"middle": "пользователей, за которых получили",
+				"end": "ALE токенов"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "Ваш баланс",
+				"subtitle": "ALE токенов"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "Напишите /start"
 		}
 	},
 	"ch": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "加入賞金跟隨我們從twitter",
+			"subtitle": "並輸入你的暱稱不用@",
+			"exist": "這個Twitter暱稱已經存在"
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "你沒加入團隊！",
+			"ethAddress": "輸入您的ERC-20以太坊地址",
+			"hint": "按 `Next` 按鈕或類型 /next",
+			"condition": "加入alehub電報聊天@alehub並點擊 /next 按鍵'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "這個以太坊地址已經存在",
+			"correct": "輸入正確的ERC-20地址",
+			"changeData": "確認輸入的數據或點擊 `Change data` 按鍵"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "你加入了賞金計劃！ 很快你的地址就會來到30個ALE令牌"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "你的推特暱稱"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "你的電報暱稱"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "你的ethereum地址"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "賞金計劃結束",
+			"referalLink": "您的推介鏈接",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "你邀請了",
+				"middle": "您收到的用戶",
+				"end": "ALE令牌"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "你的餘額是",
+				"subtitle": "ALE令牌"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "點擊 /start"
 		}
 	},
 	"de": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "Für Join to Bounty folgen Sie unserem Twitter",
+			"subtitle": "und gib deinen Nickname ohne @ ein",
+			"exist": "Dieser Twitter-Nickname existiert bereits"
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "Du bist der Gruppe nicht beigetreten!",
+			"ethAddress": "Geben Sie Ihre ERC-20 Ethereum-Adresse ein",
+			"hint": "Drück `Next` schaltfläche oder geben Sie ein /next",
+			"condition": "Melde dich bei alehub telegramm chat @alehub an und klicke /next taste'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "Diese Ethereum-Adresse existiert bereits",
+			"correct": "Geben Sie die korrekte ERC-20-Adresse ein",
+			"changeData": "Bestätigen Sie die eingegebenen Daten oder klicken Sie auf `Change data` taste"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "Du bist dem Bounty-Programm beigetreten! Bald auf Ihrer Adresse wird 30 ALE-Token kommen"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "Dein Twitter-Nickname"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "Dein Telegramm-Nickname"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "Ihre Ethereum-Adresse"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "Bounty-Programm ist vorbei",
+			"referalLink": "Ihr Empfehlungslink",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "Du hast",
+				"middle": "Benutzer eingeladen für die Sie erhalten haben",
+				"end": "ALE-Token"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "Dein Guthaben ist",
+				"subtitle": "ALE-Token"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "Klicken /start"
 		}
 	},
 	"ec": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "Para unirse a generosidad siga nuestro de twitter",
+			"subtitle": "e ingrese su apodo sin @",
+			"exist": "Este apodo de Twitter ya existe"
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "¡No te uniste al grupo!",
+			"ethAddress": "Ingrese su dirección ERC-20 ethereum",
+			"hint": "Presione el botón `Next` o escriba /next`",
+			"condition": "Únete a Alehub telegram chat @alehub y haz clic en /next botón'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "Esta dirección de Ethereum ya existe",
+			"correct": "Ingrese la dirección correcta del ERC-20",
+			"changeData": "Confirme los datos ingresados o haga clic en `Change data` botón"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "¡Te uniste al programa de recompensas! Pronto en su dirección vendrá 30 ALE token"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "Tu twitter apodo"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "Tu telegram apodo"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "Tu ethereum dirección"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "El programa Bounty ha terminado",
+			"referalLink": "Tu enlace de referencia",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "Usted invitó a",
+				"middle": "usuarios para los cuales recibió",
+				"end": "tokens ALE"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "Su balance es",
+				"subtitle": "tokens ALE"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "Hacer clic /start"
 		}
 	},
 	"kr": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "현상금에 가입하려면 twitter에서 우리를 따르십시오.",
+			"subtitle": "@없이 별명을 입력하십시오.",
+			"exist": "이 Twitter 닉네임이 이미 있습니다."
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "당신은 그룹에 가입하지 않았습니다!",
+			"ethAddress": "ERC-20 에테르 주소 입력",
+			"hint": "프레스 `Next` 버튼 또는 유형 /next",
+			"condition": "alehub 전보에 가입하여 @alehub 채팅을 클릭하십시오 /next 단추'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "이 Ethereum 주소가 이미 있습니다.",
+			"correct": "정확한 ERC-20 주소 입력",
+			"changeData": "입력 된 데이터를 확인하거나를 클릭하십시오 `Change data` 단추"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "현상금 프로그램에 가입하셨습니다! 곧 주소가 30 ALE 토큰이 올 것입니다."
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "너의 twitter 별명"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "너의 telegram 별명"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "너의 ethereum 주소"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "바운티 프로그램이 끝났습니다.",
+			"referalLink": "귀하의 추천 링크",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "초대 한 사람",
+				"middle": "귀하가받은 사용자",
+				"end": "ALE 토큰"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "잔액 :",
+				"subtitle": "ALE 토큰"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "딸깍 하는 소리 /start"
 		}
 	},
 	"jp": {
 		"twitter": {
-			"title": "For join to bounty follow our from twitter",
-			"subtitle": "and enter your nickname without @",
-			"exist": "This Twitter nickname already exists"
+			"title": "賞金に参加するには、twitterから私たちに従ってください",
+			"subtitle": "あなたのニックネームは@",
+			"exist": "このTwitterのニックネームは既に存在します"
 		},
 		"telegram": {
-			"notJoin": "You did not join the group!",
-			"ethAddress": "Enter your ERC-20 ethereum wallet address",
-			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"notJoin": "あなたはグループに参加していません！",
+			"ethAddress": "あなたのERC-20エーテルアドレスを入力してください",
+			"hint": "押す `Next` ボタンまたはタイプ /next",
+			"condition": "alehub電報に参加して@alehubにチャットしてをクリックします /next ボタン'"
 		},
 		"ethereum": {
-			"exist": "This Ethereum address already exists",
-			"correct": "Enter correct ERC-20 wallet address",
-			"changeData": "Confirm the entered data or or click on `Change data` button"
+			"exist": "このEthereumアドレスは既に存在します",
+			"correct": "正しいERC-20アドレスを入力してください",
+			"changeData": "入力したデータを確認するか、またはをクリックします `Change data` ボタン"
 		},
 		"success": {
-			"title": "You joined the bounty program! Soon on your address will come 30 ALE token"
+			"title": "あなたは賞金プログラムに参加しました！ あなたの住所にすぐに30 ALEのトークンが来ます"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "Your twitter nickname"
+				"title": "きみの twitter ニックネーム"
 			},
 			"telegram": {
-				"title": "Your telegram nickname"
+				"title": "きみの telegram ニックネーム"
 			},
 			"ethereum": {
-				"title": "Your eth address"
+				"title": "きみの ethereum 住所"
 			}
 		},
 		"bounty": {
-			"isOver": "Bounty program is over",
-			"referalLink": "Your referal link",
+			"isOver": "バウンティプログラムが終了しました",
+			"referalLink": "あなたの紹介リンク",
 			"invite": {
-				"begin": "You invited",
-				"middle": "users for which you received",
-				"end": "ALE tokens"
+				"begin": "あなたは招待されました",
+				"middle": "あなたが受け取ったユーザー",
+				"end": "ALEトークン"
 			}
 		},
 		"userData": {
-			"greeting": {
-				"title": "Hi"
-			},
 			"balance": {
-				"title": "Your balance is",
-				"subtitle": "ALE tokens"
+				"title": "残高は",
+				"subtitle": "ALEトークン"
 			}
 		},
 		"startOver": {
-			"title": "Click /start"
+			"title": "クリック /start"
 		}
 	}
 }

@@ -115,7 +115,7 @@ bot.hears('👥 My referals', (ctx) => {
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub']
-  ]).oneTime().resize().extra())
+      ]).oneTime().resize().extra())
 
   })
 });
@@ -210,13 +210,13 @@ const superWizard = new WizardScene('super-wizard',
 
     if(ctx.update.message.chat.type !== undefined) {
       if(ctx.update.message.chat.type !== 'private') {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].userData.greeting.title}, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
         referalId = Number(ctx.update.message.text.split('/start ')[1])
       }
     } else if(ctx.update.callback_query.message.chat.type !== undefined) {
       if(ctx.update.callback_query.message.chat.type !== 'private') {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].userData.greeting.title}, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
         referalId = Number(ctx.update.callback_query.message.text.split('/start ')[1])
       }
