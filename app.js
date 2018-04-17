@@ -56,6 +56,11 @@ function isChecksumAddress (address) {
 const stepHandler = new Composer()
 
 stepHandler.action('next', (ctx) => {
+
+  if(ctx.update.callback_query.message.text === undefined) {
+    return ctx.reply('Enter correct twitter nickname')
+  }
+
   ctx.telegram.getChatMember(-1001335559714, ctx.update.callback_query.from.id).then(result => {
     if(result.status !== 'member' && result.status !== 'creator') {
       ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
@@ -69,6 +74,9 @@ stepHandler.action('next', (ctx) => {
   })
 })
 stepHandler.command('next', (ctx) => {
+  if(ctx.update.message.text === undefined) {
+    return ctx.reply('Enter correct twitter nickname')
+  }
   ctx.telegram.getChatMember(-1001335559714, ctx.update.message.from.id).then(result => {
     if(result.user.status !== 'member' && result.user.status !== 'creator') {
       ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
@@ -90,7 +98,11 @@ const superWizard = new WizardScene('super-wizard',
       if(ctx.update.message.chat.type !== 'private') {
         return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
-        referalId = Number(ctx.update.message.text.split('/start ')[1])
+        if(ctx.update.message.text !== undefined) {
+          if(ctx.update.message.text.indexOf('/start') !== -1) {
+            referalId = Number(ctx.update.message.text.split('/start ')[1])
+          }
+        }
       }
     } else if(ctx.update.callback_query.message.chat.type !== undefined) {
       if(ctx.update.callback_query.message.chat.type !== 'private') {
@@ -161,6 +173,18 @@ const superWizard = new WizardScene('super-wizard',
   },
   (ctx) => {
 
+    if(ctx.update.message.text === undefined) {
+      return ctx.reply('Select language please', Markup.keyboard([
+        Markup.callbackButton('🇺🇸 English', 'next'),
+        Markup.callbackButton('🇷🇺 Russian', 'next'),
+        Markup.callbackButton('🇨🇳 Chinese', 'next'),
+        Markup.callbackButton('🇩🇪 German', 'next'),
+        Markup.callbackButton('🇪🇸 Spanish', 'next'),
+        Markup.callbackButton('🇰🇷 Korean', 'next'),
+        Markup.callbackButton('🇯🇵 Japanese', 'next')
+      ]).oneTime().resize().extra())
+    }
+
     if(ctx.update.message.text.indexOf('English') !== -1) {
       bountyData.selectedLanguage = 'en'
       ctx.reply('🇺🇸 English language is selected', Markup.removeKeyboard().extra());
@@ -214,7 +238,9 @@ const superWizard = new WizardScene('super-wizard',
       return ctx.scene.back()
     }
 
-
+    if(ctx.update.message.text === undefined) {
+      return ctx.reply('Enter correct twitter nickname')
+    }
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
         return ctx.reply('Bot error, write /start to start over')
@@ -237,6 +263,9 @@ const superWizard = new WizardScene('super-wizard',
   },
   stepHandler,
   (ctx) => {
+    if(ctx.update.message.text === undefined) {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
+    }
     if(ctx.update.message.text !== undefined || ctx.update.callback_query.message.text !== undefined) {
 
       let address = "";
@@ -278,6 +307,9 @@ const superWizard = new WizardScene('super-wizard',
     }
   },
   (ctx) => {
+    if(ctx.update.message.text === undefined) {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
+    }
     if(ctx.update.message.text === 'Confirm data') {
       fs.readFile('./members.json', 'utf-8', function(err, data) {
         if (err) {
@@ -550,7 +582,7 @@ superWizard.hears('💾 My info', (ctx) => {
   })
 });
 
-superWizard.hears('Total referal', (ctx) => {
+superWizard.command('/totalReferal', (ctx) => {
   fs.readFile('./members.json', 'utf-8', function(err, data) {
     if (err) {
       return ctx.reply('Bot error, write /start to start over')
