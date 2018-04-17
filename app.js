@@ -94,22 +94,12 @@ stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].tel
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
-    if(ctx.update !== undefined) {
-      if(ctx.update.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
-      } else {
-        if(ctx.update.message.text !== undefined) {
-          if(ctx.update.message.text.indexOf('/start') !== -1) {
-            referalId = Number(ctx.update.message.text.split('/start ')[1])
-          }
-        }
-      }
-    } else if(ctx.update.callback_query !== undefined) {
-      if(ctx.update.callback_query.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
-      } else {
-        referalId = Number(ctx.update.callback_query.message.text.split('/start ')[1])
-      }
+    if(ctx.update.message.text !== undefined) {
+      referalId = ctx.update.message.text;
+    } else if(ctx.update.callback_query.message.text !== undefined) {
+      referalId = ctx.update.callback_query.message.text;
+    } else {
+      referalId = 0;
     }
 
     fs.readFile('./members.json', 'utf-8', function(err, data) {
@@ -340,7 +330,7 @@ const superWizard = new WizardScene('super-wizard',
         var arrayOfObjects = JSON.parse(data)
         arrayOfObjects.members.push(bountyData)
 
-        if(Number(referalId) !== 0) {
+        if(referalId.split('/start ')[1] !== undefined) {
           let checkisNotReferal = arrayOfObjects.members.filter(item => {
             return item.referalMembers.indexOf(Number(referalId)) !== -1
           })
