@@ -53,169 +53,6 @@ function isChecksumAddress (address) {
     return true;
 };
 
-bot.hears('💾 My info', (ctx) => {
-  fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) {
-      return ctx.reply('Bot error, write /start to start over')
-    }
-
-    let membersList = JSON.parse(data)
-
-    let searchUserFromFile = ""
-
-    if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-    }
-
-    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-  })
-});
-
-bot.hears('Total referal', (ctx) => {
-  fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) {
-      return ctx.reply('Bot error, write /start to start over')
-    }
-    let membersList = JSON.parse(data)
-    let searchUserFromFile = ""
-    if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-    }
-    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-
-    if(ctx.update.message.from.username === 'voroncov' || ctx.update.message.from.username === 'EcoMayDom' || ctx.update.message.from.username === 'Mihall') {
-
-      let membersCount = 0;
-      let referalsCount = 0;
-
-      for(let i=0;i<membersList.members.length;i++) {
-        membersCount = membersCount+1
-        for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
-          referalsCount = referalsCount+1
-        }
-      }
-
-      ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-    } else {
-      ctx.reply('Total referal', Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-    }
-
-  })
-})
-
-bot.hears('👥 My referals', (ctx) => {
-
-  let totalReferals = 0;
-
-  fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) {
-      return ctx.reply('Bot error, write /start to start over')
-    }
-
-    let membersList = JSON.parse(data)
-
-    let searchUserFromFile = ""
-
-    if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-    }
-    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-    totalReferals = Number(searchUserFromFile.referalMembers.length)
-
-
-    let totalUsersWithReferal = 0;
-
-    for(let i=0;i<membersList.members.length;i++) {
-        totalUsersWithReferal = totalUsersWithReferal+30;
-        for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
-          totalUsersWithReferal = totalUsersWithReferal+10;
-        }
-      }
-
-      if(totalUsersWithReferal >= totalTokensForBounty) {
-        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
-      } else {
-        let botLink = "https://t.me/alehubtest_bot?start";
-        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalink} - ${botLink}=${ctx.update.message.from.id}`)
-      }
-
-      ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-
-  })
-});
-
-bot.hears('💰 Balance', (ctx) => {
-
-  let totalBalance = 0;
-
-  fs.readFile('./members.json', 'utf-8', function(err, data) {
-    if (err) {
-      return ctx.reply('Bot error, write /start to start over')
-    }
-
-    let membersList = JSON.parse(data)
-
-    let searchUserFromFile = 0
-
-    if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-      totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
-    }
-    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-
-    ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub']
-      ]).oneTime().resize().extra())
-  })
-});
-
-bot.hears('❓ FAQ', (ctx) => {
-  ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
-    ['💰 Balance', '👥 My referals'],
-    ['💾 My info', '❓ FAQ'],
-    ['ℹ️ About Alehub']
-  ]).oneTime().resize().extra())
-});
-
-bot.hears('FAQ', (ctx) => {
-  ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
-    ['About Alehub', 'FAQ']
-  ]).oneTime().resize().extra())
-});
-
-bot.hears('ℹ️ About Alehub', (ctx) => {
-  ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
-    ['💰 Balance', '👥 My referals'],
-    ['💾 My info', '❓ FAQ'],
-    ['ℹ️ About Alehub']
-  ]).oneTime().resize().extra())
-});
-
-bot.hears('About Alehub', (ctx) => {
-  ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
-    ['About Alehub', 'FAQ']
-  ]).oneTime().resize().extra())
-});
-
 const stepHandler = new Composer()
 
 stepHandler.action('next', (ctx) => {
@@ -481,6 +318,282 @@ const superWizard = new WizardScene('super-wizard',
     }
   }
 )
+
+superWizard.hears('FAQ', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    let totalUsersWithReferal = 0;
+
+    for(let i=0;i<membersList.members.length;i++) {
+      totalUsersWithReferal = totalUsersWithReferal+30;
+      for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+        totalUsersWithReferal = totalUsersWithReferal+10;
+      }
+    }
+
+    if(totalUsersWithReferal >= totalTokensForBounty) {
+      bountyData.selectedLanguage = 'en'
+      ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
+          ['About Alehub', 'FAQ']
+        ]).oneTime().resize().extra())
+    } else {
+      return ctx.wizard.back()
+    }
+  })
+});
+
+superWizard.hears('About Alehub', (ctx) => {
+
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    let totalUsersWithReferal = 0;
+
+    for(let i=0;i<membersList.members.length;i++) {
+      totalUsersWithReferal = totalUsersWithReferal+30;
+      for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+        totalUsersWithReferal = totalUsersWithReferal+10;
+      }
+    }
+
+    if(totalUsersWithReferal >= totalTokensForBounty) {
+      bountyData.selectedLanguage = 'en'
+      ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+          ['About Alehub', 'FAQ']
+        ]).oneTime().resize().extra())
+    } else {
+      return ctx.wizard.back()
+    }
+  })
+});
+
+superWizard.hears('ℹ️ About Alehub', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+
+      ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+    }
+  })
+});
+
+superWizard.hears('❓ FAQ', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+
+      ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+    }
+  })
+});
+
+superWizard.hears('💰 Balance', (ctx) => {
+  let totalBalance = 0;
+
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+
+      ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+    }
+  })
+});
+
+superWizard.hears('👥 My referals', (ctx) => {
+  let totalReferals = 0;
+
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = ""
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+      totalReferals = Number(searchUserFromFile.referalMembers.length)
+
+
+      let totalUsersWithReferal = 0;
+
+      for(let i=0;i<membersList.members.length;i++) {
+          totalUsersWithReferal = totalUsersWithReferal+30;
+          for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+            totalUsersWithReferal = totalUsersWithReferal+10;
+          }
+        }
+
+        if(totalUsersWithReferal >= totalTokensForBounty) {
+          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
+        } else {
+          let botLink = "https://t.me/alehubtest_bot?start";
+          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`)
+        }
+
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+    }
+  })
+});
+
+superWizard.hears('💾 My info', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = ""
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+    }
+  })
+});
+
+superWizard.hears('Total referal', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+    let membersList = JSON.parse(data)
+    let searchUserFromFile = ""
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      return ctx.wizard.back()
+
+    } else {
+        bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+
+      if(ctx.update.message.from.username === 'voroncov' || ctx.update.message.from.username === 'EcoMayDom' || ctx.update.message.from.username === 'Mihall') {
+
+        let membersCount = 0;
+        let referalsCount = 0;
+
+        for(let i=0;i<membersList.members.length;i++) {
+          membersCount = membersCount+1
+          for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+            referalsCount = referalsCount+1
+          }
+        }
+
+        ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+      } else {
+        ctx.reply('Total referal', Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+      }
+    }
+  })
+});
 
 const stage = new Stage([superWizard], { default: 'super-wizard' })
 bot.use(session())
