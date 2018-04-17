@@ -76,6 +76,46 @@ bot.hears('💾 My info', (ctx) => {
   })
 });
 
+bot.hears('Total referall', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+    let membersList = JSON.parse(data)
+    let searchUserFromFile = ""
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+
+    if(ctx.update.message.from.username === 'voroncov') {
+
+      let membersCount = 0;
+      let referalsCount = 0;
+
+      for(let i=0;i<membersList.members.length;i++) {
+        membersCount = membersCount+1
+        for(let j=0;j<membersList.members[i].referalMembers.length;j++) {
+          referalsCount = referalsCount+1
+        }
+      }
+
+      ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+    } else {
+      ctx.reply('Total referall', Markup.keyboard([
+          ['💰 Balance', '👥 My referals'],
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
+        ]).oneTime().resize().extra())
+    }
+
+  })
+})
+
 bot.hears('👥 My referals', (ctx) => {
 
   let totalReferals = 0;
@@ -92,6 +132,7 @@ bot.hears('👥 My referals', (ctx) => {
     if(membersList.members.length !== 0) {
       searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
     }
+    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
     totalReferals = Number(searchUserFromFile.referalMembers.length)
 
 
@@ -135,15 +176,15 @@ bot.hears('💰 Balance', (ctx) => {
 
     if(membersList.members.length !== 0) {
       searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
     }
-    totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
+    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
 
     ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
-      ['💰 Balance', '👥 My referals'],
-      ['💾 My info', '❓ FAQ'],
-      ['ℹ️ About Alehub']
-  ]).oneTime().resize().extra())
-
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
   })
 });
 
