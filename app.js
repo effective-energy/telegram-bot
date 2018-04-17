@@ -53,6 +53,29 @@ function isChecksumAddress (address) {
     return true;
 };
 
+bot.hears('💾 My info', (ctx) => {
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
+    }
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = ""
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+  })
+});
+
 bot.hears('👥 My referals', (ctx) => {
 
   let totalReferals = 0;
@@ -82,15 +105,16 @@ bot.hears('👥 My referals', (ctx) => {
       }
 
       if(totalUsersWithReferal >= totalTokensForBounty) {
-        ctx.reply('Bounty program is over')
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`)
       } else {
         let botLink = "https://t.me/alehubtest_bot?start";
-        ctx.reply(`Your referal link - ${botLink}=${ctx.update.message.from.id}`)
+        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`)
       }
 
-      ctx.reply(`You invited ${totalReferals} users for which you received ${totalReferals*10} ALE tokens`, Markup.keyboard([
-    ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub', '❓ FAQ']
+      ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
   ]).oneTime().resize().extra())
 
   })
@@ -114,9 +138,10 @@ bot.hears('💰 Balance', (ctx) => {
     }
     totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
 
-    ctx.reply(`Your balance is ${totalBalance} ALE tokens`, Markup.keyboard([
-    ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub', '❓ FAQ']
+    ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
+      ['💰 Balance', '👥 My referals'],
+      ['💾 My info', '❓ FAQ'],
+      ['ℹ️ About Alehub']
   ]).oneTime().resize().extra())
 
   })
@@ -125,7 +150,8 @@ bot.hears('💰 Balance', (ctx) => {
 bot.hears('❓ FAQ', (ctx) => {
   ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub', '❓ FAQ']
+    ['💾 My info', '❓ FAQ'],
+    ['ℹ️ About Alehub']
   ]).oneTime().resize().extra())
 });
 
@@ -138,7 +164,8 @@ bot.hears('FAQ', (ctx) => {
 bot.hears('ℹ️ About Alehub', (ctx) => {
   ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
     ['💰 Balance', '👥 My referals'],
-    ['ℹ️ About Alehub', '❓ FAQ']
+    ['💾 My info', '❓ FAQ'],
+    ['ℹ️ About Alehub']
   ]).oneTime().resize().extra())
 });
 
@@ -153,43 +180,43 @@ const stepHandler = new Composer()
 stepHandler.action('next', (ctx) => {
   ctx.telegram.getChatMember(-1001335559714, ctx.update.callback_query.from.id).then(result => {
     if(result.status !== 'member' && result.status !== 'creator') {
-      ctx.reply('You did not join the group!')
+      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
     } else {
       bountyData.telegramNickName = ctx.update.callback_query.from.username
-      ctx.reply('Enter your ERC-20 ethereum wallet address')
+      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
       return ctx.wizard.next()
     }
   }).catch(err => {
-    ctx.reply('You did not join the group!!')
+    ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
   })
 })
 stepHandler.command('next', (ctx) => {
   ctx.telegram.getChatMember(-1001335559714, ctx.update.message.from.id).then(result => {
     if(result.user.status !== 'member' && result.user.status !== 'creator') {
-      ctx.reply('You did not join the group!')
+      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
     } else {
       bountyData.telegramNickName = ctx.update.message.from.username
-      ctx.reply('Enter your ERC-20 ethereum wallet address')
+      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
       return ctx.wizard.next()
     }
   }).catch(err => {
-    ctx.reply('You did not join the group!')
+    ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
   })
 })
-stepHandler.use((ctx) => ctx.replyWithMarkdown('Press `Next` button or type /next'))
+stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].telegram.hint}`))
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
     if(ctx.update.message.chat.type !== undefined) {
       if(ctx.update.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+        return ctx.reply(`${translate[bountyData.selectedLanguage].userData.greeting.title}, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
         referalId = Number(ctx.update.message.text.split('/start ')[1])
       }
     } else if(ctx.update.callback_query.message.chat.type !== undefined) {
       if(ctx.update.callback_query.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+        return ctx.reply(`${translate[bountyData.selectedLanguage].userData.greeting.title}, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
       } else {
         referalId = Number(ctx.update.callback_query.message.text.split('/start ')[1])
       }
@@ -245,9 +272,11 @@ const superWizard = new WizardScene('super-wizard',
 
         })
       } else {
-        ctx.reply(`Your twitter nickname - @${searchUserFromFile.twitterNickName}\n\nYour telegram nickname - @${searchUserFromFile.telegramNickName}\n\nYour eth address - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+        bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
-          ['ℹ️ About Alehub', '❓ FAQ']
+          ['💾 My info', '❓ FAQ'],
+          ['ℹ️ About Alehub']
         ]).oneTime().resize().extra())
       }
     })
@@ -309,10 +338,10 @@ const superWizard = new WizardScene('super-wizard',
         return item.twitterNickName === ctx.update.message.text
       })
       if(checkIsNewTwitter.length !== 0) {
-        ctx.reply('This Twitter nickname already exists')
+        ctx.reply(`${translate[bountyData.selectedLanguage].twitter.exist}`)
       } else {
         bountyData.twitterNickName = ctx.update.message.text
-        ctx.reply('Join to alehub telegram chat @alehub and click /next button', Markup.inlineKeyboard([
+        ctx.reply(`${translate[bountyData.selectedLanguage].telegram.condition}`, Markup.inlineKeyboard([
           Markup.urlButton('Join to group', 'https://t.me/alehub'),
           Markup.callbackButton('➡️ Next', 'next')
         ]).extra())
@@ -344,11 +373,11 @@ const superWizard = new WizardScene('super-wizard',
             return item.ethAddress === bountyData.ethAddress
           })
           if(checkIsNewAddress.length !== 0) {
-            ctx.reply('This Ethereum address already exists')
+            ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.exist}`)
           } else {
-            ctx.reply('Confirm the entered data or or click on "Change data" button')
+            ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
 
-            ctx.reply(`Your twitter nickname - ${bountyData.twitterNickName}\nYour telegram nickname - ${bountyData.telegramNickName}\nYour ethereum address - ${bountyData.ethAddress}`, Markup.keyboard([
+            ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${bountyData.twitterNickName}\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${bountyData.ethAddress}`, Markup.keyboard([
                 Markup.callbackButton('Confirm data', 'next'),
                 Markup.callbackButton('Start over', 'next')
               ]).oneTime().resize().extra())
@@ -356,10 +385,10 @@ const superWizard = new WizardScene('super-wizard',
           }
         })
       } else {
-        ctx.reply('Enter correct ERC-20 wallet address')
+        ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
       }
     } else {
-      ctx.reply('Enter correct ERC-20 wallet address')
+      ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
     }
   },
   (ctx) => {
@@ -389,15 +418,16 @@ const superWizard = new WizardScene('super-wizard',
           if (err) {
             return ctx.reply('Bot error, write /start to start over')
           }
-          ctx.reply('You joined the bounty program! Soon on your address will come 30 ALE token', Markup.keyboard([
+          ctx.reply(`${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
-            ['ℹ️ About Alehub', '❓ FAQ']
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub']
           ]).oneTime().resize().extra())
           return ctx.scene.leave()
         })
       })
     } else if(ctx.update.message.text === 'Start over') {
-      ctx.reply('Click /start', Markup.removeKeyboard().extra())
+      ctx.reply(`${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
       return ctx.scene.leave()
     }
   }
