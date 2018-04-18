@@ -94,13 +94,7 @@ stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].tel
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
-    if(ctx.update.message.text !== undefined) {
-      referalId = ctx.update.message.text;
-    } else if(ctx.update.callback_query.message.text !== undefined) {
-      referalId = ctx.update.callback_query.message.text;
-    } else {
-      referalId = 0;
-    }
+    referalId = ctx.update.message.text
 
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
