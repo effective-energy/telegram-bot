@@ -64,16 +64,17 @@ stepHandler.action('next', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = 0
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
-      if(ctx.update.callback_query.message.text === undefined) {
-        return ctx.reply('Enter correct twitter nickname')
-      }
 
       ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
         if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
@@ -106,21 +107,23 @@ stepHandler.command('next', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = 0
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
-      if(ctx.update.callback_query.message.text === undefined) {
-        return ctx.reply('Enter correct twitter nickname')
-      }
-      ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.message.from.id).then(result => {
+
+      ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
         if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
         } else {
-          bountyData.telegramNickName = ctx.update.callback_query.message.from.username
+          bountyData.telegramNickName = ctx.update.callback_query.from.username
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
           return ctx.wizard.next()
         }
@@ -142,18 +145,6 @@ stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].tel
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
 
-    if(ctx.update.message.chat.type !== undefined) {
-      if(ctx.update.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
-      }
-    } else if(ctx.update.callback_query.message.chat.type !== undefined) {
-      if(ctx.update.callback_query.message.chat.type !== 'private') {
-        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
-      }
-    }
-
-    referalId = ctx.update.message.text
-
     fs.readFile('./members.json', 'utf-8', function(err, data) {
       if (err) {
         return ctx.reply('Bot error, write /start to start over')
@@ -161,10 +152,15 @@ const superWizard = new WizardScene('super-wizard',
 
       let membersList = JSON.parse(data)
 
-      let searchUserFromFile = ""
+      let searchUserFromFile = [];
+
 
       if(membersList.members.length !== 0) {
-        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+        if(ctx.update.callback_query !== undefined) {
+          searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+        } else {
+          searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+        }
       }
 
       if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -190,6 +186,19 @@ const superWizard = new WizardScene('super-wizard',
                 ['About Alehub', 'FAQ']
               ]).oneTime().resize().extra())
           } else {
+
+            if(ctx.update.callback_query !== undefined) {
+              referalId = ctx.update.callback_query.text
+              if(ctx.update.callback_query.chat.type !== 'private') {
+                return ctx.reply(`Hi, ${ctx.update.callback_query.from.first_name}!`, Markup.removeKeyboard().extra())
+              }
+            } else if(ctx.update.message.chat !== undefined) {
+              referalId = ctx.update.message.text
+              if(ctx.update.message.chat.type !== 'private') {
+                return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+              }
+            }
+
             ctx.reply('Select language', Markup.keyboard([
               Markup.callbackButton('🇺🇸 English', 'next'),
               Markup.callbackButton('🇷🇺 Russian', 'next'),
@@ -322,15 +331,15 @@ const superWizard = new WizardScene('super-wizard',
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
     }
 
-    if(ctx.update.message.text !== undefined || ctx.update.callback_query.message.text !== undefined) {
+    if(ctx.update.message.text !== undefined || ctx.update.callback_query.text !== undefined) {
 
 
       if(ctx.update.message.text.indexOf('/start ') !== undefined) {
         if(ctx.update.message.text.substr(0, 1) === "/") {
           return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
         }
-      } else if(ctx.update.callback_query.message.text.indexOf('/start ') !== undefined) {
-        if(ctx.update.callback_query.message.text.substr(0, 1) === "/") {
+      } else if(ctx.update.callback_query.text.indexOf('/start ') !== undefined) {
+        if(ctx.update.callback_query.text.substr(0, 1) === "/") {
           return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
         }
       }
@@ -338,8 +347,8 @@ const superWizard = new WizardScene('super-wizard',
       let address = "";
       if(ctx.update.message.text !== undefined) {
         address = ctx.update.message.text
-      } else if(ctx.update.callback_query.message.text !== undefined) {
-        address = ctx.update.callback_query.message.text
+      } else if(ctx.update.callback_query.text !== undefined) {
+        address = ctx.update.callback_query.text
       }
 
       if(isAddress(address)) {
@@ -504,10 +513,14 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = 0
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -532,10 +545,14 @@ superWizard.hears('❓ FAQ', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = 0
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -562,11 +579,16 @@ superWizard.hears('💰 Balance', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = 0
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-      totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+        totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+        totalBalance = Number(searchUserFromFile.referalMembers.length*10+30)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -593,10 +615,14 @@ superWizard.hears('👥 My referals', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = ""
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -638,10 +664,14 @@ superWizard.hears('💾 My info', (ctx) => {
 
     let membersList = JSON.parse(data)
 
-    let searchUserFromFile = ""
+    let searchUserFromFile = []
 
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
@@ -663,9 +693,14 @@ superWizard.command('/totalReferal', (ctx) => {
       return ctx.reply('Bot error, write /start to start over')
     }
     let membersList = JSON.parse(data)
-    let searchUserFromFile = ""
+    let searchUserFromFile = []
+    
     if(membersList.members.length !== 0) {
-      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      if(ctx.update.callback_query !== undefined) {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
+      } else {
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+      }
     }
 
     if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
