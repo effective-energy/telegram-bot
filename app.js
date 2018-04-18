@@ -80,7 +80,11 @@ stepHandler.action('next', (ctx) => {
         if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
         } else {
-          bountyData.telegramNickName = ctx.update.callback_query.from.username
+          if(ctx.update.callback_query.from.username === undefined) {
+            bountyData.telegramNickName = translate[bountyData.selectedLanguage].telegram.hidden
+          } else {
+            bountyData.telegramNickName = ctx.update.callback_query.from.username
+          }
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
           return ctx.wizard.next()
         }
@@ -123,7 +127,11 @@ stepHandler.command('next', (ctx) => {
         if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
         } else {
-          bountyData.telegramNickName = ctx.update.callback_query.from.username
+          if(bountyData.telegramNickName === undefined) {
+            bountyData.telegramNickName = translate[bountyData.selectedLanguage].telegram.hidden
+          } else {
+            bountyData.telegramNickName = ctx.update.callback_query.from.username
+          }
           ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
           return ctx.wizard.next()
         }

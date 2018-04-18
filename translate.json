@@ -10,7 +10,8 @@
 			"notJoin": "You did not join the group!",
 			"ethAddress": "Enter your ERC-20 ethereum address",
 			"hint": "Press `Next` button or type /next",
-			"condition": "Join to alehub telegram chat @alehub and click /next button'"
+			"condition": "Join to alehub telegram chat @alehub and click /next button'",
+			"hidden": "Not indicated"
 		},
 		"ethereum": {
 			"exist": "This Ethereum address already exists",
@@ -61,7 +62,8 @@
 			"notJoin": "Вы не вступили в группу!",
 			"ethAddress": "Введите ваш ERC-20 ethereum адрес",
 			"hint": "Нажмите кнопку `Next` или напишите /next",
-			"condition": "Вступите в alehub чат @alehub и нажмите на кнопку /next'"
+			"condition": "Вступите в alehub чат @alehub и нажмите на кнопку /next'",
+			"hidden": "Не указано"
 		},
 		"ethereum": {
 			"exist": "Этот Ethereum адрес уже активен",
@@ -112,7 +114,8 @@
 			"notJoin": "你沒加入團隊！",
 			"ethAddress": "輸入您的ERC-20以太坊地址",
 			"hint": "按 `Next` 按鈕或類型 /next",
-			"condition": "加入alehub電報聊天@alehub並點擊 /next 按鍵'"
+			"condition": "加入alehub電報聊天@alehub並點擊 /next 按鍵'",
+			"hidden": "未指定"
 		},
 		"ethereum": {
 			"exist": "這個以太坊地址已經存在",
@@ -163,7 +166,8 @@
 			"notJoin": "Du bist der Gruppe nicht beigetreten!",
 			"ethAddress": "Geben Sie Ihre ERC-20 Ethereum-Adresse ein",
 			"hint": "Drück `Next` schaltfläche oder geben Sie ein /next",
-			"condition": "Melde dich bei alehub telegramm chat @alehub an und klicke /next taste'"
+			"condition": "Melde dich bei alehub telegramm chat @alehub an und klicke /next taste'",
+			"hidden": "Nicht angegeben"
 		},
 		"ethereum": {
 			"exist": "Diese Ethereum-Adresse existiert bereits",
@@ -214,7 +218,8 @@
 			"notJoin": "¡No te uniste al grupo!",
 			"ethAddress": "Ingrese su dirección ERC-20 ethereum",
 			"hint": "Presione el botón `Next` o escriba /next`",
-			"condition": "Únete a Alehub telegram chat @alehub y haz clic en /next botón'"
+			"condition": "Únete a Alehub telegram chat @alehub y haz clic en /next botón'",
+			"hidden": "Sin especificar"
 		},
 		"ethereum": {
 			"exist": "Esta dirección de Ethereum ya existe",
@@ -265,7 +270,8 @@
 			"notJoin": "당신은 그룹에 가입하지 않았습니다!",
 			"ethAddress": "ERC-20 에테르 주소 입력",
 			"hint": "프레스 `Next` 버튼 또는 유형 /next",
-			"condition": "alehub 전보에 가입하여 @alehub 채팅을 클릭하십시오 /next 단추'"
+			"condition": "alehub 전보에 가입하여 @alehub 채팅을 클릭하십시오 /next 단추'",
+			"hidden": "지정되지 않음"
 		},
 		"ethereum": {
 			"exist": "이 Ethereum 주소가 이미 있습니다.",
@@ -316,7 +322,8 @@
 			"notJoin": "あなたはグループに参加していません！",
 			"ethAddress": "あなたのERC-20エーテルアドレスを入力してください",
 			"hint": "押す `Next` ボタンまたはタイプ /next",
-			"condition": "alehub電報に参加して@alehubにチャットしてをクリックします /next ボタン'"
+			"condition": "alehub電報に参加して@alehubにチャットしてをクリックします /next ボタン'",
+			"hidden": "指定なし"
 		},
 		"ethereum": {
 			"exist": "このEthereumアドレスは既に存在します",
