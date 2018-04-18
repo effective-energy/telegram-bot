@@ -57,42 +57,100 @@ const stepHandler = new Composer()
 
 stepHandler.action('next', (ctx) => {
 
-  if(ctx.update.callback_query.message.text === undefined) {
-    return ctx.reply('Enter correct twitter nickname')
-  }
-
-  ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
-    if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
-      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
-    } else {
-      bountyData.telegramNickName = ctx.update.callback_query.from.username
-      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
-      return ctx.wizard.next()
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
     }
-  }).catch(err => {
-    ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      if(ctx.update.callback_query.message.text === undefined) {
+        return ctx.reply('Enter correct twitter nickname')
+      }
+
+      ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
+        if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
+          ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+        } else {
+          bountyData.telegramNickName = ctx.update.callback_query.from.username
+          ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
+          return ctx.wizard.next()
+        }
+      }).catch(err => {
+        ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+      })
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+    }
   })
 })
+
 stepHandler.command('next', (ctx) => {
-  if(ctx.update.message.text === undefined) {
-    return ctx.reply('Enter correct twitter nickname')
-  }
-  ctx.telegram.getChatMember(-1001173782659, ctx.update.message.from.id).then(result => {
-    if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
-      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
-    } else {
-      bountyData.telegramNickName = ctx.update.message.from.username
-      ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
-      return ctx.wizard.next()
+
+  fs.readFile('./members.json', 'utf-8', function(err, data) {
+    if (err) {
+      return ctx.reply('Bot error, write /start to start over')
     }
-  }).catch(err => {
-    ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+
+    let membersList = JSON.parse(data)
+
+    let searchUserFromFile = 0
+
+    if(membersList.members.length !== 0) {
+      searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.message.from.id)
+    }
+
+    if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
+      if(ctx.update.callback_query.message.text === undefined) {
+        return ctx.reply('Enter correct twitter nickname')
+      }
+      ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.message.from.id).then(result => {
+        if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
+          ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+        } else {
+          bountyData.telegramNickName = ctx.update.callback_query.message.from.username
+          ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
+          return ctx.wizard.next()
+        }
+      }).catch(err => {
+        ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+      })
+    } else {
+      bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - @${searchUserFromFile.twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - @${searchUserFromFile.telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${searchUserFromFile.ethAddress}`, Markup.keyboard([
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub']
+      ]).oneTime().resize().extra())
+    }
   })
 })
 stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].telegram.hint}`))
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
+
+    if(ctx.update.message.chat.type !== undefined) {
+      if(ctx.update.message.chat.type !== 'private') {
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+      }
+    } else if(ctx.update.callback_query.message.chat.type !== undefined) {
+      if(ctx.update.callback_query.message.chat.type !== 'private') {
+        return ctx.reply(`Hi, ${ctx.update.message.from.first_name}!`, Markup.removeKeyboard().extra())
+      }
+    }
 
     referalId = ctx.update.message.text
 
@@ -255,6 +313,15 @@ const superWizard = new WizardScene('super-wizard',
     if(ctx.update.message.text === undefined) {
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
     }
+
+    if(ctx.update.message.text.length <= 0) {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
+    }
+
+    if(Number(ctx.update.message.text) === 0) {
+      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`)
+    }
+
     if(ctx.update.message.text !== undefined || ctx.update.callback_query.message.text !== undefined) {
 
 
@@ -325,15 +392,17 @@ const superWizard = new WizardScene('super-wizard',
         arrayOfObjects.members.push(bountyData)
 
         if(referalId.split('/start ')[1] !== undefined) {
-          let checkisNotReferal = arrayOfObjects.members.filter(item => {
-            return item.referalMembers.indexOf(Number(referalId)) !== -1
-          })
-          if(checkisNotReferal.length === 0) {
-            arrayOfObjects.members.filter(member => {
-              if(Number(member.telegramUserId) === Number(referalId)) {
-                member.referalMembers.push(bountyData.telegramUserId)
-              }
+          if(!isNaN(referalId.split('/start ')[1])) {
+            let checkisNotReferal = arrayOfObjects.members.filter(item => {
+              return item.referalMembers.indexOf(Number(referalId.split('/start ')[1])) !== -1
             })
+            if(checkisNotReferal.length === 0) {
+              arrayOfObjects.members.filter(member => {
+                if(Number(member.telegramUserId) === Number(referalId.split('/start ')[1])) {
+                  member.referalMembers.push(bountyData.telegramUserId)
+                }
+              })
+            }
           }
         }
 
@@ -350,7 +419,7 @@ const superWizard = new WizardScene('super-wizard',
         })
       })
     } else if(ctx.update.message.text === 'Start over') {
-      ctx.reply(`${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
+      ctx.reply(`${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
       return ctx.scene.leave()
     } else {
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
