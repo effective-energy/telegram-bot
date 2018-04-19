@@ -21,7 +21,7 @@ let bountyData = {
 let referalId = 0;
 let botLink = "https://t.me/alehub_bot?start";
 
-let totalTokensForBounty = 2200000; //2.2m
+let totalTokensForBounty = 2000000; //2m
 
 let sha3 = (value) => {
   return SHA3(value, {
@@ -119,23 +119,21 @@ stepHandler.command('next', (ctx) => {
       let searchUserFromFile = []
 
       if(membersList.members.length !== 0) {
-        if(ctx.update.callback_query !== undefined) {
-          searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.callback_query.from.id)
-        } else {
-          searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
-        }
+        searchUserFromFile = membersList.members.find(user => user.telegramUserId === ctx.update.message.from.id)
       }
 
       if(searchUserFromFile === undefined || searchUserFromFile.length === 0) {
 
-        ctx.telegram.getChatMember(-1001173782659, ctx.update.callback_query.from.id).then(result => {
+        console.log('CTX', ctx)
+
+        ctx.telegram.getChatMember(-1001173782659, ctx.update.from.id).then(result => {
           if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
             ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
           } else {
             if(bountyData.telegramNickName === undefined) {
               bountyData.telegramNickName = translate[bountyData.selectedLanguage].telegram.hidden
             } else {
-              bountyData.telegramNickName = ctx.update.callback_query.from.username
+              bountyData.telegramNickName = ctx.update.from.username
             }
             ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
             return ctx.wizard.next()
@@ -204,10 +202,15 @@ const superWizard = new WizardScene('super-wizard',
                 ]).oneTime().resize().extra())
             } else {
 
-              if(ctx.update.callback_query !== undefined) {
-                referalId = ctx.update.callback_query.text
-                if(ctx.update.callback_query.chat.type !== 'private') {
-                  return ctx.reply(`Hi, ${ctx.update.callback_query.from.first_name}!`, Markup.removeKeyboard().extra())
+              if(ctx.message !== undefined) {
+                referalId = ctx.message.text
+                if(ctx.chat.type !== 'private') {
+                  return ctx.reply(`Hi, ${ctx.message.chat.from.first_name}!`, Markup.removeKeyboard().extra())
+                }
+              } else if(ctx.update.callback_query.message.chat.type !== undefined) {
+                referalId = ctx.update.callback_query.message.text
+                if(ctx.update.callback_query.message.chat.type !== 'private') {
+                  return ctx.reply(`Hi, ${ctx.update.callback_query.message.from.first_name}!`, Markup.removeKeyboard().extra())
                 }
               } else if(ctx.update.message.chat !== undefined) {
                 referalId = ctx.update.message.text
