@@ -4,7 +4,9 @@
 			"title": "Follow us on twitter",
 			"subtitle": "and enter your nick without @",
 			"exist": "This twitter-nick is active",
-			"correct": "Please enter a correct nick in twitter"
+			"correct": "Please enter a correct nick in twitter",
+			"new": "Enter your new twitter-nick, do not forget to subscribe to us on Twitter",
+			"newTo": "Your twitter-nick change to"
 		},
 		"telegram": {
 			"notJoin": "You joined the group!",
@@ -16,17 +18,20 @@
 		"ethereum": {
 			"exist": "This Ethereum address is active",
 			"correct": "Enter a correct ERC-20 address",
-			"changeData": "Confirm the entered data or click on `Change data` button"
+			"changeData": "Confirm the entered data or click on `Change data` button",
+			"new": "Enter your new ethereum address",
+			"newTo": "Ethereum address changed to"
 		},
 		"success": {
-			"title": "You have successfully joined the bounty program! After ICO, your address will add 30 ALE tokens"
+			"title": "You have successfully joined the bounty program! After ICO, your address will add 30 ALE tokens",
+			"language": "The language has been changed"
 		},
 		"alreadyJoin": {
 			"twitter": {
 				"title": "Your twitter nick"
 			},
 			"telegram": {
-				"title": "Your telegram Your twitter nick"
+				"title": "Your telegram"
 			},
 			"ethereum": {
 				"title": "Your ethereum address"
@@ -49,6 +54,9 @@
 		},
 		"startOver": {
 			"title": "Print /start"
+		},
+		"error": {
+			"userNotFound": "User not found"
 		}
 	},
 	"ru": {
@@ -56,7 +64,9 @@
 			"title": "Подпишитесь на нас в twitter",
 			"subtitle": "и введите ваш никнейм без @",
 			"exist": "Этот twitter-никнейм уже активен",
-			"correct": "Введите правильный никнейм в twitter"
+			"correct": "Введите правильный никнейм в twitter",
+			"new": "Введите ваш новый twitter-никнейм, не забудьте подписаться на нас в Twitter",
+			"newTo": "Ваш twitter-никнейм изменен на"
 		},
 		"telegram": {
 			"notJoin": "Вы не вступили в группу!",
@@ -68,10 +78,13 @@
 		"ethereum": {
 			"exist": "Этот Ethereum адрес уже активен",
 			"correct": "Введите корректный ERC-20 адрес",
-			"changeData": "Подтвердите введенные данные или нажмите на кнопку `Change data`"
+			"changeData": "Подтвердите введенные данные или нажмите на кнопку `Change data`",
+			"new": "Введите ваш новый ethereum адрес",
+			"newTo": "Ethereum адрес изменен"
 		},
 		"success": {
-			"title": "Вы успешно присоединились к баунти-программе! После ICO на вашем адресе появится 30 ALE токенов"
+			"title": "Вы успешно присоединились к баунти-программе! После ICO на вашем адресе появится 30 ALE токенов",
+			"language": "Язык был изменен на"
 		},
 		"alreadyJoin": {
 			"twitter": {
@@ -101,6 +114,9 @@
 		},
 		"startOver": {
 			"title": "Напишите /start"
+		},
+		"error": {
+			"userNotFound": "Пользователь не найден"
 		}
 	},
 	"ch": {
@@ -108,7 +124,9 @@
 			"title": "加入賞金跟隨我們從twitter",
 			"subtitle": "並輸入你的暱稱不用@",
 			"exist": "這個Twitter暱稱已經存在",
-			"correct": "輸入正確的Twitter暱稱"
+			"correct": "輸入正確的Twitter暱稱",
+			"new": "輸入你的新推特暱稱，別忘了在Twitter上訂閱我們",
+			"newTo": "您的推特暱稱已更改為"
 		},
 		"telegram": {
 			"notJoin": "你沒加入團隊！",
@@ -120,10 +138,13 @@
 		"ethereum": {
 			"exist": "這個以太坊地址已經存在",
 			"correct": "輸入正確的ERC-20地址",
-			"changeData": "確認輸入的數據或點擊 `Change data` 按鍵"
+			"changeData": "確認輸入的數據或點擊 `Change data` 按鍵",
+			"new": "輸入您的新ethereum地址",
+			"newTo": "以太坊地址更改為"
 		},
 		"success": {
-			"title": "你加入了賞金計劃！ 很快你的地址就會來到30個ALE令牌"
+			"title": "你加入了賞金計劃！ 很快你的地址就會來到30個ALE令牌",
+			"language": "語言已經改變"
 		},
 		"alreadyJoin": {
 			"twitter": {
@@ -153,6 +174,9 @@
 		},
 		"startOver": {
 			"title": "點擊 /start"
+		},
+		"error": {
+			"userNotFound": "未找到用戶"
 		}
 	},
 	"de": {
@@ -160,7 +184,9 @@
 			"title": "Folgen Sie uns auf Twitter",
 			"subtitle": "und geben Sie Ihren Nutzername ohne @ ein",
 			"exist": "Dieser Twitter-Nutzername wird bereits verwendet",
-			"correct": "Geben Sie bitte den richtigen Twitter-Nutzername ein"
+			"correct": "Geben Sie bitte den richtigen Twitter-Nutzername ein",
+			"new": "Geben Sie Ihren neuen Twitter-Nicknamen ein, vergessen Sie nicht, uns auf Twitter zu abonnieren",
+			"newTo": "Ihr Twitter-Nickname wurde in geändert"
 		},
 		"telegram": {
 			"notJoin": "Sie sind kein Mitglied der Gruppe!",
@@ -172,17 +198,20 @@
 		"ethereum": {
 			"exist": "Diese Ethereum-Adresse wird bereits verwendet",
 			"correct": "Geben Sie bitte die korrekte ERC-20 Adresse ein",
-			"changeData": "Bestätigen Sie die eingegebenen Daten oder klicken Sie auf `Change data`"
+			"changeData": "Bestätigen Sie die eingegebenen Daten oder klicken Sie auf `Change data`",
+			"new": "Geben Sie Ihre neue Ethereum-Adresse ein",
+			"newTo": "Die Adresse von Ethereum wurde geändert in"
 		},
 		"success": {
-			"title": "Sie haben sich erfolgreich dem Bounty-Programm angeschlossen! Nach dem ICO erhalten Sie 30 ALE Token"
+			"title": "Sie haben sich erfolgreich dem Bounty-Programm angeschlossen! Nach dem ICO erhalten Sie 30 ALE Token",
+			"language": "Die Sprache wurde geändert"
 		},
 		"alreadyJoin": {
 			"twitter": {
 				"title": "Ihr Twitter-Nutzername"
 			},
 			"telegram": {
-				"title": "Ihr Telegramm Nutzername"
+				"title": "Ihr Telegram-Nutzername"
 			},
 			"ethereum": {
 				"title": "Ihre Ethereum Adresse"
@@ -205,6 +234,9 @@
 		},
 		"startOver": {
 			"title": "Geben Sie /start ein"
+		},
+		"error": {
+			"userNotFound": "Benutzer nicht gefunden"
 		}
 	},
 	"ec": {
@@ -212,7 +244,9 @@
 			"title": "Para unirse a generosidad siga nuestro de twitter",
 			"subtitle": "e ingrese su apodo sin @",
 			"exist": "Este apodo de Twitter ya existe",
-			"correct": "Ingrese el apodo correcto de twitter"
+			"correct": "Ingrese el apodo correcto de twitter",
+			"new": "Ingrese su nuevo nick de twitter, no se olvide de suscribirse a nosotros en Twitter",
+			"newTo": "Tu nick de twitter cambia a"
 		},
 		"telegram": {
 			"notJoin": "¡No te uniste al grupo!",
@@ -224,10 +258,13 @@
 		"ethereum": {
 			"exist": "Esta dirección de Ethereum ya existe",
 			"correct": "Ingrese la dirección correcta del ERC-20",
-			"changeData": "Confirme los datos ingresados o haga clic en `Change data` botón"
+			"changeData": "Confirme los datos ingresados o haga clic en `Change data` botón",
+			"new": "Ingrese su nueva dirección ethereum",
+			"newTo": "La dirección de Ethereum cambió a"
 		},
 		"success": {
-			"title": "¡Te uniste al programa de recompensas! Pronto en su dirección vendrá 30 ALE token"
+			"title": "¡Te uniste al programa de recompensas! Pronto en su dirección vendrá 30 ALE token",
+			"language": "El lenguaje ha sido cambiado"
 		},
 		"alreadyJoin": {
 			"twitter": {
@@ -257,6 +294,9 @@
 		},
 		"startOver": {
 			"title": "Hacer clic /start"
+		},
+		"error": {
+			"userNotFound": "Usuario no encontrado"
 		}
 	},
 	"kr": {
@@ -264,7 +304,9 @@
 			"title": "현상금에 가입하려면 twitter에서 우리를 따르십시오.",
 			"subtitle": "@없이 별명을 입력하십시오.",
 			"exist": "이 Twitter 닉네임이 이미 있습니다.",
-			"correct": "올바른 트위터 닉네임을 입력하십시오."
+			"correct": "올바른 트위터 닉네임을 입력하십시오.",
+			"new": "새로운 twitter-nick을 입력하십시오. Twitter에서 우리를 구독하는 것을 잊지 마십시오.",
+			"newTo": "귀하의 twitter-nick 변경 사항"
 		},
 		"telegram": {
 			"notJoin": "당신은 그룹에 가입하지 않았습니다!",
@@ -276,10 +318,13 @@
 		"ethereum": {
 			"exist": "이 Ethereum 주소가 이미 있습니다.",
 			"correct": "정확한 ERC-20 주소 입력",
-			"changeData": "입력 된 데이터를 확인하거나를 클릭하십시오 `Change data` 단추"
+			"changeData": "입력 된 데이터를 확인하거나를 클릭하십시오 `Change data` 단추",
+			"new": "새로운 에테르 주소 입력",
+			"newTo": "Ethereum 주소가 (으)로 변경되었습니다."
 		},
 		"success": {
-			"title": "현상금 프로그램에 가입하셨습니다! 곧 주소가 30 ALE 토큰이 올 것입니다."
+			"title": "현상금 프로그램에 가입하셨습니다! 곧 주소가 30 ALE 토큰이 올 것입니다.",
+			"language": "언어가 변경되었습니다."
 		},
 		"alreadyJoin": {
 			"twitter": {
@@ -309,6 +354,9 @@
 		},
 		"startOver": {
 			"title": "딸깍 하는 소리 /start"
+		},
+		"error": {
+			"userNotFound": "사용자를 찾을 수 없음"
 		}
 	},
 	"jp": {
@@ -316,7 +364,9 @@
 			"title": "賞金に参加するには、twitterから私たちに従ってください",
 			"subtitle": "あなたのニックネームは@",
 			"exist": "このTwitterのニックネームは既に存在します",
-			"correct": "正しいtwitterニックネームを入力してください"
+			"correct": "正しいtwitterニックネームを入力してください",
+			"new": "あなたの新しいtwitter-nickを入力してください、Twitterで私たちに購読することを忘れないでください",
+			"newTo": "あなたのtwitter-nickの変更点"
 		},
 		"telegram": {
 			"notJoin": "あなたはグループに参加していません！",
@@ -328,10 +378,13 @@
 		"ethereum": {
 			"exist": "このEthereumアドレスは既に存在します",
 			"correct": "正しいERC-20アドレスを入力してください",
-			"changeData": "入力したデータを確認するか、またはをクリックします `Change data` ボタン"
+			"changeData": "入力したデータを確認するか、またはをクリックします `Change data` ボタン",
+			"new": "あなたの新しいエレメントアドレスを入力してください",
+			"newTo": "Ethereumアドレスが変更されました"
 		},
 		"success": {
-			"title": "あなたは賞金プログラムに参加しました！ あなたの住所にすぐに30 ALEのトークンが来ます"
+			"title": "あなたは賞金プログラムに参加しました！ あなたの住所にすぐに30 ALEのトークンが来ます",
+			"language": "言語が変更されました"
 		},
 		"alreadyJoin": {
 			"twitter": {
@@ -361,6 +414,9 @@
 		},
 		"startOver": {
 			"title": "クリック /start"
+		},
+		"error": {
+			"userNotFound": "ユーザーが見つかりません"
 		}
 	}
 }
