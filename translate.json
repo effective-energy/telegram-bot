@@ -57,6 +57,9 @@
 		},
 		"error": {
 			"userNotFound": "User not found"
+		},
+		"settings": {
+			"select": "Select an action"
 		}
 	},
 	"ru": {
@@ -117,6 +120,9 @@
 		},
 		"error": {
 			"userNotFound": "Пользователь не найден"
+		},
+		"settings": {
+			"select": "Выберите действие"
 		}
 	},
 	"ch": {
@@ -177,6 +183,9 @@
 		},
 		"error": {
 			"userNotFound": "未找到用戶"
+		},
+		"settings": {
+			"select": "選擇一個動作"
 		}
 	},
 	"de": {
@@ -237,6 +246,9 @@
 		},
 		"error": {
 			"userNotFound": "Benutzer nicht gefunden"
+		},
+		"settings": {
+			"select": "Wählen Sie eine Aktion"
 		}
 	},
 	"ec": {
@@ -297,6 +309,9 @@
 		},
 		"error": {
 			"userNotFound": "Usuario no encontrado"
+		},
+		"settings": {
+			"select": "Selecciona una acción"
 		}
 	},
 	"kr": {
@@ -357,6 +372,9 @@
 		},
 		"error": {
 			"userNotFound": "사용자를 찾을 수 없음"
+		},
+		"settings": {
+			"select": "액션 선택"
 		}
 	},
 	"jp": {
@@ -417,6 +435,9 @@
 		},
 		"error": {
 			"userNotFound": "ユーザーが見つかりません"
+		},
+		"settings": {
+			"select": "アクションを選択"
 		}
 	}
 }

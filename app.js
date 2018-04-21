@@ -766,7 +766,7 @@ superWizard.hears('⚙ Settings', (ctx) => {
         return ctx.wizard.back()
       } else {
         bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-        ctx.reply(`Select`, Markup.keyboard([
+        ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
           ['🇺🇸 Change language', '⚙ Edit my details'],
           ['Come back']
         ]).oneTime().resize().extra())
@@ -800,7 +800,7 @@ superWizard.hears('⚙ Edit my details', (ctx) => {
         return ctx.wizard.back()
       } else {
         bountyData.selectedLanguage = searchUserFromFile.selectedLanguage
-        ctx.reply(`Select`, Markup.keyboard([
+        ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
           ['⚙ Edit twitter', '⚙ Edit ethereum address'],
           ['Come back']
         ]).oneTime().resize().extra())
