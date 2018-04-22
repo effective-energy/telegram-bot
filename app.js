@@ -206,7 +206,7 @@ const superWizard = new WizardScene('super-wizard',
               if(ctx.message !== undefined) {
                 referalId = ctx.message.text
                 if(ctx.chat.type !== 'private') {
-                  return ctx.reply(`Hi, ${ctx.message.chat.from.first_name}!`, Markup.removeKeyboard().extra())
+                  return ctx.reply(`Hi, ${ctx.message.from.first_name}!`, Markup.removeKeyboard().extra())
                 }
               } else if(ctx.update.callback_query.message.chat.type !== undefined) {
                 referalId = ctx.update.callback_query.message.text
