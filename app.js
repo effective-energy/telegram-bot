@@ -1199,20 +1199,28 @@ superWizard.command('/totalReferal', (ctx) => {
       if(mongo_result.length !== 0) {
         bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
         if(botDataFrom.username === 'voroncov' || botDataFrom.username === 'EcoMayDom' || botDataFrom.username === 'Mihall') {
-          let membersCount = mongo_result.length;
-          let referalsCount = 0;
 
-          for(let i=0;i<mongo_result.length;i++) {
-            if(mongo_result[i].referalMembers.length !== 0) {
-              referalsCount = referalsCount+1;
+          Member.find()
+          .exec()
+          .then(mongo_result_all_users => {
+            let membersCount = mongo_result_all_users.length;
+            let referalsCount = 0;
+
+            for(let i=0;i<mongo_result_all_users.length;i++) {
+              if(mongo_result_all_users[i].referalMembers.length !== 0) {
+                referalsCount = referalsCount+1;
+              }
             }
-          }
 
-          ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
-            ['💰 Balance', '👥 My referals'],
-            ['💾 My info', '❓ FAQ'],
-            ['ℹ️ About Alehub', '⚙ Settings']
-          ]).oneTime().resize().extra())
+            ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
+              ['💰 Balance', '👥 My referals'],
+              ['💾 My info', '❓ FAQ'],
+              ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra())
+          })
+          .catch(mongo_error => {
+            return ctx.reply('Bot error, write /start to start over');
+          })
 
         } else {
           ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
