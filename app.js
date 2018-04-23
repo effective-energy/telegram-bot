@@ -12,11 +12,26 @@ const Scene = require('telegraf/scenes/base');
 const { enter, leave } = Stage;
 
 // Database config
-const Datastore = require('nedb');
-let db = new Datastore();
-db = {};
-db.members = new Datastore('DB/members.db');
-db.members.loadDatabase();
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/members');
+let db = mongoose.connection;
+db.on('error', function() {
+  console.log('Error connection to MongoDB');
+});
+db.once('open', function() {
+  console.log('Successfuly connection to MongoDB');
+});
+
+let membersSchema = mongoose.Schema({
+  telegramUserId: { type: Number, require: true },
+  twitterNickName: { type: String, require: true },
+  telegramNickName: { type: String, require: true },
+  ethAddress: { type: String, require: true },
+  selectedLanguage: { type: String, require: true },
+  referalMembers: { type: Array, require: true }
+});
+
+let Member = mongoose.model('Member', membersSchema);
 
 let bountyData = {
   telegramUserId: '',
@@ -30,7 +45,7 @@ let bountyData = {
 let referalId = 0;
 let botLink = "https://t.me/alehub_bot?start";
 
-let chatId = -1001173782659;
+let chatId = "";
 
 let totalTokensForBounty = 2200000; //2.2m
 
@@ -87,20 +102,17 @@ stepHandler.action('next', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        ctx.reply('Bot error, write /start to start over');
-        return ctx.scene.leave();
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
-        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({telegramUserId: botDataFrom.id})
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         ctx.telegram.getChatMember(chatId, botDataFrom.id).then(result => {
           if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
             ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
@@ -118,11 +130,16 @@ stepHandler.action('next', (ctx) => {
         })
       }
     })
+    .catch(mongo_error => {
+      ctx.reply('Bot error, write /start to start over');
+      return ctx.scene.leave();
+    })
+
   } catch(error) {
     ctx.reply('Bot error, write /start to start over');
     return ctx.scene.leave();
   }
-})
+});
 
 stepHandler.command('next', (ctx) => {
   try {
@@ -145,20 +162,17 @@ stepHandler.command('next', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        ctx.reply('Bot error, write /start to start over');
-        return ctx.scene.leave();
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
-        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({telegramUserId: botDataFrom.id})
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         ctx.telegram.getChatMember(chatId, botDataFrom.id).then(result => {
           if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
             ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
@@ -176,6 +190,11 @@ stepHandler.command('next', (ctx) => {
         })
       }
     })
+    .catch(mongo_error => {
+      ctx.reply('Bot error, write /start to start over');
+      return ctx.scene.leave();
+    })
+
   } catch(error) {
     ctx.reply('Bot error, write /start to start over');
     return ctx.scene.leave();
@@ -210,26 +229,23 @@ const superWizard = new WizardScene('super-wizard',
         return ctx.reply(`Hi, ${botDataChat.from.first_name}!`, Markup.removeKeyboard().extra());
       }
 
-      db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-        if (err === true) {
-          ctx.reply('Bot error, write /start to start over');
-          return ctx.scene.leave();
-        }
-        if(docs.length !== 0) {
-          bountyData.selectedLanguage = docs[0].selectedLanguage
-          return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+      Member.find({ telegramUserId: botDataFrom.id })
+      .exec()
+      .then(mongo_result => {
+        if(mongo_result.length !== 0) {
+          bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+          return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
             ['💾 My info', '❓ FAQ'],
             ['ℹ️ About Alehub', '⚙ Settings']
           ]).oneTime().resize().extra())
         } else {
-
           let totalUsersWithReferal = 0;
-          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-          for(let i=0;i<docs.length;i++) {
-            if(docs[i].referalMembers.length !== 0) {
-              totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+          for(let i=0;i<mongo_result.length;i++) {
+            if(mongo_result[i].referalMembers.length !== 0) {
+              totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
             }
           }
 
@@ -252,6 +268,11 @@ const superWizard = new WizardScene('super-wizard',
           return ctx.wizard.next()
         }
       })
+      .catch(mongo_error => {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      })
+
     } catch(error) {
       ctx.reply('Bot error, write /start to start over');
       return ctx.scene.leave();
@@ -374,12 +395,10 @@ const superWizard = new WizardScene('super-wizard',
         return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
       }
 
-      db.members.find({ twitterNickName: botDataText }, function (err, docs) {
-        if (err === true) {
-          ctx.reply('Bot error, write /start to start over');
-          return ctx.scene.leave();
-        }
-        if(docs.length !== 0) {
+      Member.find({ twitterNickName: botDataText })
+      .exec()
+      .then(mongo_result => {
+        if(mongo_result.length !== 0) {
           ctx.reply(`${translate[bountyData.selectedLanguage].twitter.exist}`)
         } else {
           bountyData.twitterNickName = botDataText;
@@ -389,6 +408,10 @@ const superWizard = new WizardScene('super-wizard',
           ]).extra())
           return ctx.wizard.next()
         }
+      })
+      .catch(mongo_error => {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
       })
     } catch(error) {
       ctx.reply('Bot error, write /start to start over');
@@ -435,12 +458,10 @@ const superWizard = new WizardScene('super-wizard',
 
       if(isAddress(botDataText)) {
 
-        db.members.find({ ethAddress: botDataText }, function (err, docs) {
-          if (err === true) {
-            ctx.reply('Bot error, write /start to start over');
-            return ctx.scene.leave();
-          }
-          if(docs.length !== 0) {
+        Member.find({ ethAddress: botDataText })
+        .exec()
+        .then(mongo_result => {
+          if(mongo_result.length !== 0) {
             ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.exist}`);
           } else {
             bountyData.ethAddress = ctx.update.message.text;
@@ -453,6 +474,10 @@ const superWizard = new WizardScene('super-wizard',
                 ]).oneTime().resize().extra())
               return ctx.wizard.next()
           }
+        })
+        .catch(mongo_error => {
+          ctx.reply('Bot error, write /start to start over');
+          return ctx.scene.leave();
         })
       } else {
         return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
@@ -492,107 +517,129 @@ const superWizard = new WizardScene('super-wizard',
       }
 
       if(botDataText === 'Confirm data') {
-        if(referalId.split('/start ')[1] !== undefined) {
-          if(!isNaN(referalId.split('/start ')[1])) {
-            db.members.find({ telegramUserId: referalId.split('/start ')[1] }, function (err, docs) {
-              if (err === true) {
-                ctx.reply('Bot error, write /start to start over');
-                return ctx.scene.leave();
-              }
-              if(docs.length !== 0) {
-                if(docs.referalMembers.length === 0) {
-                  db.members.insert(bountyData, function (err, newDoc) {
-                    if(err === true) {
-                      ctx.reply('Bot error, write /start to start over');
-                      return ctx.scene.leave();
-                    } else {
+        if(referalId.split('/start ')[1] !== undefined && !isNaN(referalId.split('/start ')[1])) {
+          Member.find({ telegramUserId: referalId.split('/start ')[1] })
+          .exec()
+          .then(mongo_result => {
+            if(mongo_result.length !== 0) {
+              Member.find({ referalMembers: botDataFrom.id })
+              .exec()
+              .then(mongo_result_search => {
+                if(mongo_result_search.length === 0) {
+                  Member.update({ telegramUserId: referalId.split('/start ')[1] }, {
+                    $push: { referalMembers: botDataFrom.id }
+                  })
+                  .exec()
+                  .then(mongo_result_update => {
+                    let newMember = new Member({
+                      telegramUserId: bountyData.telegramUserId,
+                      twitterNickName: bountyData.twitterNickName,
+                      telegramNickName: bountyData.telegramNickName,
+                      ethAddress: bountyData.ethAddress,
+                      selectedLanguage: bountyData.selectedLanguage,
+                      referalMembers: bountyData.referalMembers
+                    });
+                    newMember
+                    .save()
+                    .then(mongo_result_create => {
                       ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
                         ['💰 Balance', '👥 My referals'],
                         ['💾 My info', '❓ FAQ'],
                         ['ℹ️ About Alehub', '⚙ Settings']
                       ]).oneTime().resize().extra())
                       return ctx.scene.leave()
-                    }
-                  });
-                } else {
-                  db.members.find({ referalMembers: botDataFrom.id }, function (err, findReferals) {
-                    if(findReferals.length === 0) {
-                      db.members.insert(bountyData, function (err, newDoc) {
-                        if(err === true) {
-                          ctx.reply('Bot error, write /start to start over');
-                          return ctx.scene.leave();
-                        } else {
-                          ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
-                            ['💰 Balance', '👥 My referals'],
-                            ['💾 My info', '❓ FAQ'],
-                            ['ℹ️ About Alehub', '⚙ Settings']
-                          ]).oneTime().resize().extra())
-                          return ctx.scene.leave()
-                        }
-                      });
-                    } else {
-                      bountyData.referalMembers.push(botDataFrom.id);
-                      db.members.insert(bountyData, function (err, newDoc) {
-                        if(err === true) {
-                          ctx.reply('Bot error, write /start to start over');
-                          return ctx.scene.leave();
-                        } else {
-                          ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
-                            ['💰 Balance', '👥 My referals'],
-                            ['💾 My info', '❓ FAQ'],
-                            ['ℹ️ About Alehub', '⚙ Settings']
-                          ]).oneTime().resize().extra())
-                          return ctx.scene.leave()
-                        }
-                      });
-                    }
-                  });
-                }
-              } else {
-                db.members.insert(bountyData, function (err, newDoc) {
-                  if(err === true) {
+                    })
+                    .catch(mongo_error => {
+                      ctx.reply('Bot error, write /start to start over');
+                      return ctx.scene.leave();
+                    })
+                  })
+                  .catch(mongo_error => {
                     ctx.reply('Bot error, write /start to start over');
                     return ctx.scene.leave();
-                  } else {
+                  })
+                } else {
+                  let newMember = new Member({
+                    telegramUserId: bountyData.telegramUserId,
+                    twitterNickName: bountyData.twitterNickName,
+                    telegramNickName: bountyData.telegramNickName,
+                    ethAddress: bountyData.ethAddress,
+                    selectedLanguage: bountyData.selectedLanguage,
+                    referalMembers: bountyData.referalMembers
+                  });
+                  newMember
+                  .save()
+                  .then(mongo_result_create => {
                     ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
                       ['💰 Balance', '👥 My referals'],
                       ['💾 My info', '❓ FAQ'],
                       ['ℹ️ About Alehub', '⚙ Settings']
                     ]).oneTime().resize().extra())
                     return ctx.scene.leave()
-                  }
-                });
-              }
-            })
-          } else {
-            db.members.insert(bountyData, function (err, newDoc) {
-              if(err === true) {
+                  })
+                  .catch(mongo_error => {
+                    ctx.reply('Bot error, write /start to start over');
+                    return ctx.scene.leave();
+                  })
+                }
+              })
+              .catch(mongo_error => {
                 ctx.reply('Bot error, write /start to start over');
                 return ctx.scene.leave();
-              } else {
+              })
+            } else {
+              let newMember = new Member({
+                telegramUserId: bountyData.telegramUserId,
+                twitterNickName: bountyData.twitterNickName,
+                telegramNickName: bountyData.telegramNickName,
+                ethAddress: bountyData.ethAddress,
+                selectedLanguage: bountyData.selectedLanguage,
+                referalMembers: bountyData.referalMembers
+              });
+              newMember
+              .save()
+              .then(mongo_result_create => {
                 ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
                   ['💰 Balance', '👥 My referals'],
                   ['💾 My info', '❓ FAQ'],
                   ['ℹ️ About Alehub', '⚙ Settings']
                 ]).oneTime().resize().extra())
                 return ctx.scene.leave()
-              }
-            });
-          }
-        } else {
-          db.members.insert(bountyData, function (err, newDoc) {
-            if(err === true) {
-              ctx.reply('Bot error, write /start to start over');
-              return ctx.scene.leave();
-            } else {
-              ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
-                ['💰 Balance', '👥 My referals'],
-                ['💾 My info', '❓ FAQ'],
-                ['ℹ️ About Alehub', '⚙ Settings']
-              ]).oneTime().resize().extra())
-              return ctx.scene.leave()
+              })
+              .catch(mongo_error => {
+                ctx.reply('Bot error, write /start to start over');
+                return ctx.scene.leave();
+              })
             }
+          })
+          .catch(mongo_error => {
+            ctx.reply('Bot error, write /start to start over');
+            return ctx.scene.leave();
+          })
+
+        } else {
+          let newMember = new Member({
+            telegramUserId: bountyData.telegramUserId,
+            twitterNickName: bountyData.twitterNickName,
+            telegramNickName: bountyData.telegramNickName,
+            ethAddress: bountyData.ethAddress,
+            selectedLanguage: bountyData.selectedLanguage,
+            referalMembers: bountyData.referalMembers
           });
+          newMember
+          .save()
+          .then(mongo_result_create => {
+            ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
+              ['💰 Balance', '👥 My referals'],
+              ['💾 My info', '❓ FAQ'],
+              ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra())
+            return ctx.scene.leave()
+          })
+          .catch(mongo_error => {
+            ctx.reply('Bot error, write /start to start over');
+            return ctx.scene.leave();
+          })
         }
       } else if(botDataText === 'Start over') {
         ctx.reply(`${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
@@ -628,12 +675,11 @@ superWizard.hears('FAQ', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
 
         ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
@@ -641,13 +687,12 @@ superWizard.hears('FAQ', (ctx) => {
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         let totalUsersWithReferal = 0;
-          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-        for(let i=0;i<docs.length;i++) {
-          if(docs[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+        for(let i=0;i<mongo_result.length;i++) {
+          if(mongo_result[i].referalMembers.length !== 0) {
+            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
           }
         }
 
@@ -660,6 +705,9 @@ superWizard.hears('FAQ', (ctx) => {
           return ctx.wizard.back()
         }
       }
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
     })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
@@ -687,12 +735,11 @@ superWizard.hears('About Alehub', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
 
         ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
@@ -700,13 +747,12 @@ superWizard.hears('About Alehub', (ctx) => {
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         let totalUsersWithReferal = 0;
-          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-        for(let i=0;i<docs.length;i++) {
-          if(docs[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+        for(let i=0;i<mongo_result.length;i++) {
+          if(mongo_result[i].referalMembers.length !== 0) {
+            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
           }
         }
 
@@ -719,6 +765,10 @@ superWizard.hears('About Alehub', (ctx) => {
           return ctx.wizard.back()
         }
       }
+
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
     })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
@@ -746,12 +796,11 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
 
         ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
@@ -759,13 +808,12 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         let totalUsersWithReferal = 0;
-          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-        for(let i=0;i<docs.length;i++) {
-          if(docs[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+        for(let i=0;i<mongo_result.length;i++) {
+          if(mongo_result[i].referalMembers.length !== 0) {
+            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
           }
         }
 
@@ -778,6 +826,10 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
           return ctx.wizard.back()
         }
       }
+
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
     })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
@@ -805,12 +857,11 @@ superWizard.hears('❓ FAQ', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length !== 0) {
-        bountyData.selectedLanguage = docs[0].selectedLanguage
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
 
         ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
@@ -818,13 +869,12 @@ superWizard.hears('❓ FAQ', (ctx) => {
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
       } else {
-
         let totalUsersWithReferal = 0;
-          totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-        for(let i=0;i<docs.length;i++) {
-          if(docs[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+        for(let i=0;i<mongo_result.length;i++) {
+          if(mongo_result[i].referalMembers.length !== 0) {
+            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
           }
         }
 
@@ -837,6 +887,9 @@ superWizard.hears('❓ FAQ', (ctx) => {
           return ctx.wizard.back()
         }
       }
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
     })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
@@ -864,25 +917,26 @@ superWizard.hears('💰 Balance', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-
-      if(docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
         totalBalance = 30; //Minimal user balance for bounty;
-        totalBalance = totalBalance+Number(docs[0].referalMembers.length * 10); //Tokens for referals
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
+        totalBalance = totalBalance+Number(mongo_result[0].referalMembers.length * 10); //Tokens for referals
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
 
         ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
           ]).oneTime().resize().extra());
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -910,22 +964,18 @@ superWizard.hears('👥 My referals', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if(err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-
-      if(docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
 
         let totalUsersWithReferal = 0;
-        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(docs.length*30);
+        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
 
-        for(let i=0;i<docs.length;i++) {
-          if(docs[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(docs[i].referalMembers.length*10);
+        for(let i=0;i<mongo_result.length;i++) {
+          if(mongo_result[i].referalMembers.length !== 0) {
+            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
           }
         }
 
@@ -940,9 +990,13 @@ superWizard.hears('👥 My referals', (ctx) => {
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
+      } else {
+        return ctx.wizard.back();
       }
-    });
-
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -969,20 +1023,22 @@ superWizard.hears('⚙ Settings', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if(err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
         ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
           ['🇺🇸 Change language', '⚙ Edit my details'],
           ['Come back']
         ]).oneTime().resize().extra())
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1009,20 +1065,22 @@ superWizard.hears('⚙ Edit my details', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if (docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
         ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
           ['⚙ Edit twitter', '⚙ Edit ethereum address'],
           ['Come back']
         ]).oneTime().resize().extra())
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1049,21 +1107,23 @@ superWizard.hears('Come back', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if (docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
+        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1090,22 +1150,23 @@ superWizard.hears('💾 My info', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if (docs.length === 0) {
-        return ctx.wizard.back();
-      }
-      else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
+        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
         ]).oneTime().resize().extra())
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1132,20 +1193,17 @@ superWizard.command('/totalReferal', (ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      if(docs.length === 0) {
-        return ctx.wizard.back();
-      } else {
-        bountyData.selectedLanguage = docs[0].selectedLanguage;
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      if(mongo_result.length !== 0) {
+        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
         if(botDataFrom.username === 'voroncov' || botDataFrom.username === 'EcoMayDom' || botDataFrom.username === 'Mihall') {
-          let membersCount = docs.length;
+          let membersCount = mongo_result.length;
           let referalsCount = 0;
 
-          for(let i=0;i<docs.length;i++) {
-            if(docs[i].referalMembers.length !== 0) {
+          for(let i=0;i<mongo_result.length;i++) {
+            if(mongo_result[i].referalMembers.length !== 0) {
               referalsCount = referalsCount+1;
             }
           }
@@ -1157,14 +1215,19 @@ superWizard.command('/totalReferal', (ctx) => {
           ]).oneTime().resize().extra())
 
         } else {
-          ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+          ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
             ['💾 My info', '❓ FAQ'],
             ['ℹ️ About Alehub', '⚙ Settings']
           ]).oneTime().resize().extra())
         }
+      } else {
+        return ctx.wizard.back();
       }
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1208,16 +1271,18 @@ changeLanguageScene.leave((ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1266,26 +1331,18 @@ changeLanguageScene.on('text', (ctx) => {
       selectedLanguage = 'jp';
     }
 
-    db.members.update(
-      {
-        telegramUserId: botDataFrom.id
-      },
-      {
-        $set: {
-          selectedLanguage: selectedLanguage
-        }
-      },
-      {
-        multi: false
-      }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-
+    Member.update({ telegramUserId: botDataFrom.id }, { '$set': {
+      selectedLanguage: selectedLanguage
+    }})
+    .exec()
+    .then(mongo_result => {
       bountyData.selectedLanguage = selectedLanguage;
       ctx.reply(`${translate[bountyData.selectedLanguage].success.language}`)
       return ctx.scene.leave();
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1333,16 +1390,18 @@ changetwitterScene.leave((ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over');
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1376,34 +1435,29 @@ changetwitterScene.on('text', (ctx) => {
       return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
     } else {
 
-      db.members.find({ twitterNickName: botDataText }, function (err, docs) {
-        if (err === true) {
-          return ctx.reply('Bot error, write /start to start over');
-        }
-        if(docs.length !== 0) {
+      Member.find({ twitterNickName: botDataText })
+      .exec()
+      .then(mongo_result => {
+        if(mongo_result.length !== 0) {
           ctx.reply(`${translate[bountyData.selectedLanguage].twitter.exist}`);
         } else {
-          db.members.update(
-            {
-              telegramUserId: botDataFrom.id
-            },
-            {
-              $set: {
-                twitterNickName: botDataText
-              }
-            },
-            {
-              multi: false
-            }, function (err, docs) {
-            if (err === true) {
-              return ctx.reply('Bot error, write /start to start over');
-            }
+          Member.update({ telegramUserId: botDataFrom.id }, { '$set': {
+            twitterNickName: botDataText
+          }})
+          .exec()
+          .then(mongo_result_update => {
             bountyData.twitterNickName = botDataText;
             ctx.reply(`${translate[bountyData.selectedLanguage].twitter.newTo} ${botDataText}`);
             return ctx.scene.leave();
-          });
+          })
+          .catch(mongo_error => {
+            return ctx.reply('Bot error, write /start to start over');
+          })
         }
-      });
+      })
+      .catch(mongo_error => {
+        return ctx.reply('Bot error, write /start to start over');
+      })
     }
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
@@ -1452,16 +1506,18 @@ changeEthereumScene.leave((ctx) => {
       botDataText = ctx.update.message.text;
     }
 
-    db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-      if (err === true) {
-        return ctx.reply('Bot error, write /start to start over');
-      }
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${docs[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${docs[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${docs[0].ethAddress}`, Markup.keyboard([
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
-    });
+    })
+    .catch(mongo_error => {
+      return ctx.reply('Bot error, write /start to start over')
+    })
   } catch(error) {
     return ctx.reply('Bot error, write /start to start over')
   }
@@ -1491,31 +1547,29 @@ changeEthereumScene.on('text', (ctx) => {
     }
 
     if(isAddress(botDataText)) {
-      db.members.find({ telegramUserId: botDataFrom.id }, function (err, docs) {
-        if(docs.length !== 0) {
+      Member.find({ ethAddress: botDataText })
+      .exec()
+      .then(mongo_result => {
+        if(mongo_result.length !== 0) {
           ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.exist}`);
         } else {
-          db.members.update(
-            {
-              telegramUserId: botDataFrom.id
-            },
-            {
-              $set: {
-                ethAddress: botDataText
-              }
-            },
-            {
-              multi: false
-            }, function (err, docs) {
-            if (err === true) {
-              return ctx.reply('Bot error, write /start to start over');
-            }
+          Member.update({ telegramUserId: botDataFrom.id }, { '$set': {
+            ethAddress: botDataText
+          }})
+          .exec()
+          .then(mongo_result_update => {
             bountyData.ethAddress = botDataText;
             ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.newTo} ${botDataText}`);
             return ctx.scene.leave();
-          });
+          })
+          .catch(mongo_error => {
+            return ctx.reply('Bot error, write /start to start over');
+          })
         }
-      });
+      })
+      .catch(mongo_error => {
+        return ctx.reply('Bot error, write /start to start over');
+      })
     } else {
       return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
     }
