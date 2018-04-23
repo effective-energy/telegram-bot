@@ -207,28 +207,6 @@ const superWizard = new WizardScene('super-wizard',
   (ctx) => {
     try {
 
-      let botDataFrom = [];
-      let botDataChat = [];
-      let botDataText = "";
-
-      if (ctx.message !== undefined) {
-        botDataFrom = ctx.message.from;
-        botDataChat = ctx.message.chat;
-        botDataText = ctx.message.text;
-      } else if (ctx.update.callback_query !== undefined) {
-        botDataFrom = ctx.update.callback_query.from;
-        botDataChat = ctx.update.callback_query.message.chat;
-        botDataText = ctx.update.callback_query.message.text;
-      } else if (ctx.update.message !== undefined) {
-        botDataFrom = ctx.update.message.from;
-        botDataChat = ctx.update.message.chat;
-        botDataText = ctx.update.message.text;
-      }
-
-      if(botDataChat.type !== 'private') {
-        return ctx.reply(`Hi, ${botDataChat.from.first_name}!`, Markup.removeKeyboard().extra());
-      }
-
       Member.find({ telegramUserId: botDataFrom.id })
       .exec()
       .then(mongo_result => {
@@ -653,6 +631,47 @@ const superWizard = new WizardScene('super-wizard',
     }
   }
 )
+
+superWizard.on('new_chat_members', (ctx) => {
+
+  let botDataFrom = [];
+  let botDataChat = [];
+
+  if (ctx.message !== undefined) {
+    botDataFrom = ctx.message.from;
+    botDataChat = ctx.message.chat;
+  } else if (ctx.update.callback_query !== undefined) {
+    botDataFrom = ctx.update.callback_query.from;
+    botDataChat = ctx.update.callback_query.message.chat;
+  } else if (ctx.update.message !== undefined) {
+    botDataFrom = ctx.update.message.from;
+    botDataChat = ctx.update.message.chat;
+  }
+
+  if(botDataChat.type !== 'private') {
+    return ctx.reply(`Hi, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
+  }
+});
+
+superWizard.on('left_chat_member', (ctx) => {
+  let botDataFrom = [];
+  let botDataChat = [];
+
+  if (ctx.message !== undefined) {
+    botDataFrom = ctx.message.from;
+    botDataChat = ctx.message.chat;
+  } else if (ctx.update.callback_query !== undefined) {
+    botDataFrom = ctx.update.callback_query.from;
+    botDataChat = ctx.update.callback_query.message.chat;
+  } else if (ctx.update.message !== undefined) {
+    botDataFrom = ctx.update.message.from;
+    botDataChat = ctx.update.message.chat;
+  }
+
+  if(botDataChat.type !== 'private') {
+    return ctx.reply(`Goodbye, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
+  }
+});
 
 superWizard.hears('FAQ', (ctx) => {
   try {
