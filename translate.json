@@ -127,59 +127,59 @@
 	},
 	"ch": {
 		"twitter": {
-			"title": "加入賞金跟隨我們從twitter",
-			"subtitle": "並輸入你的暱稱不用@",
-			"exist": "這個Twitter暱稱已經存在",
-			"correct": "輸入正確的Twitter暱稱",
+			"title": "在twitter上订阅我们",
+			"subtitle": "输入你的昵称，无需@",
+			"exist": "该twitter昵称已激活",
+			"correct": "请在twitter上输入有效昵称",
 			"new": "輸入你的新推特暱稱，別忘了在Twitter上訂閱我們",
-			"newTo": "您的推特暱稱已更改為"
+			"newTo": "您的推特暱稱已更改"
 		},
 		"telegram": {
-			"notJoin": "你沒加入團隊！",
-			"ethAddress": "輸入您的ERC-20以太坊地址",
-			"hint": "按 `Next` 按鈕或類型 /next",
-			"condition": "加入alehub電報聊天@alehub並點擊 /next 按鍵'",
-			"hidden": "未指定"
+			"notJoin": "未加入群组",
+			"ethAddress": "输入您的ERC-20以太坊地址",
+			"hint": "点击按钮“下一步”或填写/下一步",
+			"condition": "“在聊天框中输入alehub @alehub，然后单击/ next按钮",
+			"hidden": "未显示"
 		},
 		"ethereum": {
-			"exist": "這個以太坊地址已經存在",
-			"correct": "輸入正確的ERC-20地址",
-			"changeData": "確認輸入的數據或點擊 `Change data` 按鍵",
+			"exist": "该以太坊地址已激活",
+			"correct": "输入正确的ERC-20地址",
+			"changeData": "确认输入的信息或按下“更改信息”按钮",
 			"new": "輸入您的新ethereum地址",
-			"newTo": "以太坊地址更改為"
+			"newTo": "以太坊地址改變了"
 		},
 		"success": {
-			"title": "你加入了賞金計劃！ 很快你的地址就會來到30個ALE令牌",
+			"title": "您已成功加入赏金计划！在首次币发行后，您的账户上将有30个ALE代币到账",
 			"language": "語言已經改變"
 		},
 		"alreadyJoin": {
 			"twitter": {
-				"title": "你的推特暱稱"
+				"title": "您的twitter昵称"
 			},
 			"telegram": {
-				"title": "你的電報暱稱"
+				"title": "您的电报昵称"
 			},
 			"ethereum": {
-				"title": "你的ethereum地址"
+				"title": "您的以太坊地址"
 			}
 		},
 		"bounty": {
-			"isOver": "賞金計劃結束",
-			"referalLink": "您的推介鏈接",
+			"isOver": "赏金计划结束",
+			"referalLink": "您的推介链接",
 			"invite": {
-				"begin": "你邀請了",
-				"middle": "您收到的用戶",
+				"begin": "你邀請了 ",
+				"middle": "用戶為誰",
 				"end": "ALE令牌"
 			}
 		},
 		"userData": {
 			"balance": {
-				"title": "你的餘額是",
-				"subtitle": "ALE令牌"
+				"title": "您的餘額",
+				"subtitle": "您的ALE代币余额"
 			}
 		},
 		"startOver": {
-			"title": "點擊 /start"
+			"title": "输入/开始"
 		},
 		"error": {
 			"userNotFound": "未找到用戶"
@@ -253,29 +253,29 @@
 	},
 	"ec": {
 		"twitter": {
-			"title": "Para unirse a generosidad siga nuestro de twitter",
-			"subtitle": "e ingrese su apodo sin @",
-			"exist": "Este apodo de Twitter ya existe",
-			"correct": "Ingrese el apodo correcto de twitter",
+			"title": "Siga en twitter",
+			"subtitle": "Escriba vuestro apodo sin @",
+			"exist": "Este apodo de twitter ha activado ya",
+			"correct": "Escriba apodo correcto en twitter",
 			"new": "Ingrese su nuevo nick de twitter, no se olvide de suscribirse a nosotros en Twitter",
 			"newTo": "Tu nick de twitter cambia a"
 		},
 		"telegram": {
-			"notJoin": "¡No te uniste al grupo!",
-			"ethAddress": "Ingrese su dirección ERC-20 ethereum",
-			"hint": "Presione el botón `Next` o escriba /next`",
-			"condition": "Únete a Alehub telegram chat @alehub y haz clic en /next botón'",
-			"hidden": "Sin especificar"
+			"notJoin": "No has entrado en el grupo",
+			"ethAddress": "Escriba tu ERC-20 ethereum dirección",
+			"hint": "Haga clic en el botón Next o escriba /next",
+			"condition": "Entra en alehub chat @alehub y haga clic en el botón 'next'",
+			"hidden": "No se especifica "
 		},
 		"ethereum": {
-			"exist": "Esta dirección de Ethereum ya existe",
-			"correct": "Ingrese la dirección correcta del ERC-20",
-			"changeData": "Confirme los datos ingresados o haga clic en `Change data` botón",
+			"exist": "Este Ethereum dirección ha activado ya",
+			"correct": "Escriba correctamente el ERC-20 dirección",
+			"changeData": "Confirma la entrada o haga clic en el botón `Change data`",
 			"new": "Ingrese su nueva dirección ethereum",
 			"newTo": "La dirección de Ethereum cambió a"
 		},
 		"success": {
-			"title": "¡Te uniste al programa de recompensas! Pronto en su dirección vendrá 30 ALE token",
+			"title": "Te uniste al programa de recompensas! Pronto en su dirección vendrá 30 ALE token",
 			"language": "El lenguaje ha sido cambiado"
 		},
 		"alreadyJoin": {
