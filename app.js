@@ -13,7 +13,7 @@ const { enter, leave } = Stage;
 
 // Database config
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/members');
+mongoose.connect('mongodb://localhost/members1');
 let db = mongoose.connection;
 db.on('error', function() {
   console.log('Error connection to MongoDB');
@@ -43,7 +43,7 @@ let bountyData = {
 }
 
 let referalId = 0;
-let botLink = "https://t.me/alehub_bot?start";
+let botLink = "";
 
 let chatId = "";
 
@@ -353,6 +353,7 @@ const superWizard = new WizardScene('super-wizard',
 
       setTimeout(function() {
         ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io ${translate[bountyData.selectedLanguage].twitter.subtitle}`, Markup.inlineKeyboard([
+          Markup.callbackButton('⬅️ Change the language', 'changeLanguage'),
           Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
           ]).oneTime().resize().extra())
         return ctx.wizard.next()
@@ -381,6 +382,15 @@ const superWizard = new WizardScene('super-wizard',
         botDataFrom = ctx.update.message.from;
         botDataChat = ctx.update.message.chat;
         botDataText = ctx.update.message.text;
+      }
+
+      if (ctx.update.callback_query !== undefined) {
+        if (ctx.update.callback_query.data !== undefined) {
+          if (ctx.update.callback_query.data === 'changeLanguage') {
+            ctx.reply('To change the language, write to bot /start');
+            return ctx.scene.leave();
+          }
+        }
       }
 
       if(bountyData.selectedLanguage.length === 0) {
