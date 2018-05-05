@@ -13,7 +13,7 @@ const { enter, leave } = Stage;
 
 // Database config
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/members1');
+mongoose.connect('');
 let db = mongoose.connection;
 db.on('error', function() {
   console.log('Error connection to MongoDB');
