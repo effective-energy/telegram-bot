@@ -11,9 +11,11 @@ const SHA3 = require('crypto-js/sha3');
 const Scene = require('telegraf/scenes/base');
 const { enter, leave } = Stage;
 
+bot.use(session());
+
 // Database config
 const mongoose = require('mongoose');
-mongoose.connect('');
+mongoose.connect('mongodb://localhost/members');
 let db = mongoose.connection;
 db.on('error', function() {
   console.log('Error connection to MongoDB');
@@ -32,15 +34,6 @@ let membersSchema = mongoose.Schema({
 });
 
 let Member = mongoose.model('Member', membersSchema);
-
-let bountyData = {
-  telegramUserId: '',
-  twitterNickName: '',
-  telegramNickName: '',
-  ethAddress: '',
-  selectedLanguage: '',
-  referalMembers: []
-}
 
 let referalId = 0;
 let botLink = "";
@@ -79,7 +72,7 @@ function isChecksumAddress (address) {
     return true;
 };
 
-const stepHandler = new Composer()
+const stepHandler = new Composer();
 
 stepHandler.action('next', (ctx) => {
   try {
@@ -106,8 +99,8 @@ stepHandler.action('next', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
-        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -115,30 +108,48 @@ stepHandler.action('next', (ctx) => {
       } else {
         ctx.telegram.getChatMember(chatId, botDataFrom.id).then(result => {
           if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
-            ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+            return ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.notJoin}`)
           } else {
             if(botDataFrom.username === undefined) {
-              bountyData.telegramNickName = translate[bountyData.selectedLanguage].telegram.hidden
+              ctx.session.telegramNickName = translate[ctx.session.selectedLanguage].telegram.hidden
             } else {
-              bountyData.telegramNickName = botDataFrom.username
+              ctx.session.telegramNickName = botDataFrom.username
             }
-            ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
+            ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.ethAddress}`)
             return ctx.wizard.next()
           }
         }).catch(err => {
-          return ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.notJoin}`)
         })
+        return null;
       }
     })
     .catch(mongo_error => {
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      }
+    })
+    return null;
+  } catch(error) {
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
       ctx.reply('Bot error, write /start to start over');
       return ctx.scene.leave();
-    })
-
-  } catch(error) {
-    ctx.reply('Bot error, write /start to start over');
-    return ctx.scene.leave();
+    }
   }
+  return null;
 });
 
 stepHandler.command('next', (ctx) => {
@@ -166,8 +177,8 @@ stepHandler.command('next', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
-        return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -175,36 +186,56 @@ stepHandler.command('next', (ctx) => {
       } else {
         ctx.telegram.getChatMember(chatId, botDataFrom.id).then(result => {
           if(result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
-            ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+            return ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.notJoin}`)
           } else {
             if(botDataFrom.username === undefined) {
-              bountyData.telegramNickName = translate[bountyData.selectedLanguage].telegram.hidden
+              ctx.session.telegramNickName = translate[ctx.session.selectedLanguage].telegram.hidden
             } else {
-              bountyData.telegramNickName = botDataFrom.username
+              ctx.session.telegramNickName = botDataFrom.username
             }
-            ctx.reply(`${translate[bountyData.selectedLanguage].telegram.ethAddress}`)
+            ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.ethAddress}`)
             return ctx.wizard.next()
           }
         }).catch(err => {
-          return ctx.reply(`${translate[bountyData.selectedLanguage].telegram.notJoin}`)
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.notJoin}`)
         })
+        return null;
       }
     })
     .catch(mongo_error => {
+
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      }
+    })
+    return null;
+  } catch(error) {
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
       ctx.reply('Bot error, write /start to start over');
       return ctx.scene.leave();
-    })
-
-  } catch(error) {
-    ctx.reply('Bot error, write /start to start over');
-    return ctx.scene.leave();
+    }
   }
+  return null;
 });
 
-stepHandler.use((ctx) => ctx.reply(`${translate[bountyData.selectedLanguage].telegram.hint}`));
+stepHandler.use((ctx) => ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.hint}`));
 
 const superWizard = new WizardScene('super-wizard',
   (ctx) => {
+
     try {
 
       let botDataFrom = [];
@@ -233,8 +264,8 @@ const superWizard = new WizardScene('super-wizard',
       .exec()
       .then(mongo_result => {
         if(mongo_result.length !== 0) {
-          bountyData.selectedLanguage = mongo_result[0].selectedLanguage
-          return ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+          ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
             ['💾 My info', '❓ FAQ'],
             ['ℹ️ About Alehub', '⚙ Settings']
@@ -269,14 +300,31 @@ const superWizard = new WizardScene('super-wizard',
         }
       })
       .catch(mongo_error => {
+        if(mongo_error.response !== undefined) {
+          if(mongo_error.response.error_code !== undefined) {
+            if(mongo_error.response.error_code === 403) {
+              return console.log('bot is blocked');
+            }
+          }
+        } else {
+          ctx.reply('Bot error, write /start to start over');
+          return ctx.scene.leave();
+        }
+      })
+      return null;
+    } catch(error) {
+      if(error.response !== undefined) {
+        if(error.response.error_code !== undefined) {
+          if(error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
         ctx.reply('Bot error, write /start to start over');
         return ctx.scene.leave();
-      })
-
-    } catch(error) {
-      ctx.reply('Bot error, write /start to start over');
-      return ctx.scene.leave();
+      }
     }
+    return null;
   },
   (ctx) => {
     try {
@@ -312,31 +360,31 @@ const superWizard = new WizardScene('super-wizard',
       }
 
       if(botDataText.indexOf('English') !== -1) {
-        bountyData.selectedLanguage = 'en'
+        ctx.session.selectedLanguage = 'en'
         ctx.reply('🇺🇸 English language is selected', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('Russian') !== -1) {
-        bountyData.selectedLanguage = 'ru'
+        ctx.session.selectedLanguage = 'ru'
         ctx.reply('🇷🇺 Выбран русский язык', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('Chinese') !== -1) {
-        bountyData.selectedLanguage = 'ch'
+        ctx.session.selectedLanguage = 'ch'
         ctx.reply('🇨🇳 中文被選中', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('German') !== -1) {
-        bountyData.selectedLanguage = 'de'
+        ctx.session.selectedLanguage = 'de'
         ctx.reply('🇩🇪 Die deutsche Sprache ist ausgewählt', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('Spanish') !== -1) {
-        bountyData.selectedLanguage = 'ec'
+        ctx.session.selectedLanguage = 'ec'
         ctx.reply('🇪🇸 El idioma español es seleccionado', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('Korean') !== -1) {
-        bountyData.selectedLanguage = 'kr'
+        ctx.session.selectedLanguage = 'kr'
         ctx.reply('🇰🇷 한국어가 선택되었습니다.', Markup.removeKeyboard().extra());
 
       } else if(botDataText.indexOf('Japanese') !== -1) {
-        bountyData.selectedLanguage = 'jp'
+        ctx.session.selectedLanguage = 'jp'
         ctx.reply('🇯🇵 日本語が選択されている', Markup.removeKeyboard().extra());
 
       } else {
@@ -352,16 +400,25 @@ const superWizard = new WizardScene('super-wizard',
       }
 
       setTimeout(function() {
-        ctx.reply(`${translate[bountyData.selectedLanguage].twitter.title} https://twitter.com/alehub_io ${translate[bountyData.selectedLanguage].twitter.subtitle}`, Markup.inlineKeyboard([
+        ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.title} https://twitter.com/alehub_io ${translate[ctx.session.selectedLanguage].twitter.subtitle}`, Markup.inlineKeyboard([
           Markup.callbackButton('⬅️ Change the language', 'changeLanguage'),
           Markup.urlButton('Twitter', 'https://twitter.com/alehub_io')
           ]).oneTime().resize().extra())
         return ctx.wizard.next()
       }, 300)
     } catch(error) {
-      ctx.reply('Bot error, write /start to start over');
-      return ctx.scene.leave();
+      if(error.response !== undefined) {
+        if(error.response.error_code !== undefined) {
+          if(error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      }
     }
+    return null;
   },
   (ctx) => {
     try {
@@ -384,35 +441,37 @@ const superWizard = new WizardScene('super-wizard',
         botDataText = ctx.update.message.text;
       }
 
-      if (ctx.update.callback_query !== undefined) {
-        if (ctx.update.callback_query.data !== undefined) {
-          if (ctx.update.callback_query.data === 'changeLanguage') {
-            ctx.reply('To change the language, write to bot /start');
-            return ctx.scene.leave();
+      if(ctx.update !== undefined) {
+        if (ctx.update.callback_query !== undefined) {
+          if (ctx.update.callback_query.data !== undefined) {
+            if (ctx.update.callback_query.data === 'changeLanguage') {
+              ctx.reply('To change the language, write to bot /start');
+              return ctx.scene.leave();
+            }
           }
         }
       }
 
-      if(bountyData.selectedLanguage.length === 0) {
+      if(ctx.session.selectedLanguage.length === 0) {
         return ctx.scene.back();
       }
 
       if(botDataText === undefined) {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.correct}`)
       }
 
       if(botDataText.substr(0, 1) === "/") {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.correct}`)
       }
 
       Member.find({ twitterNickName: botDataText })
       .exec()
       .then(mongo_result => {
         if(mongo_result.length !== 0) {
-          ctx.reply(`${translate[bountyData.selectedLanguage].twitter.exist}`)
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.exist}`)
         } else {
-          bountyData.twitterNickName = botDataText;
-          ctx.reply(`${translate[bountyData.selectedLanguage].telegram.condition}`, Markup.inlineKeyboard([
+          ctx.session.twitterNickName = botDataText;
+          ctx.reply(`${translate[ctx.session.selectedLanguage].telegram.condition}`, Markup.inlineKeyboard([
             Markup.urlButton('Join to group', 'https://t.me/alehub'),
             Markup.callbackButton('➡️ Next', 'next')
           ]).extra())
@@ -420,13 +479,31 @@ const superWizard = new WizardScene('super-wizard',
         }
       })
       .catch(mongo_error => {
+        if(mongo_error.response !== undefined) {
+          if(mongo_error.response.error_code !== undefined) {
+            if(mongo_error.response.error_code === 403) {
+              return console.log('bot is blocked');
+            }
+          }
+        } else {
+          ctx.reply('Bot error, write /start to start over');
+          return ctx.scene.leave();
+        }
+      })
+      return null;
+    } catch(error) {
+      if(error.response !== undefined) {
+        if(error.response.error_code !== undefined) {
+          if(error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
         ctx.reply('Bot error, write /start to start over');
         return ctx.scene.leave();
-      })
-    } catch(error) {
-      ctx.reply('Bot error, write /start to start over');
-      return ctx.scene.leave();
+      }
     }
+    return null;
   },
   stepHandler,
   (ctx) => {
@@ -451,19 +528,19 @@ const superWizard = new WizardScene('super-wizard',
       }
 
       if(botDataText === undefined) {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
       }
 
       if(botDataText.length <= 0) {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
       }
 
       if(Number(botDataText) === 0) {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
       }
 
       if(botDataText.substr(0, 1) === "/") {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
       }
 
       if(isAddress(botDataText)) {
@@ -472,13 +549,13 @@ const superWizard = new WizardScene('super-wizard',
         .exec()
         .then(mongo_result => {
           if(mongo_result.length !== 0) {
-            ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.exist}`);
+            return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.exist}`);
           } else {
-            bountyData.ethAddress = ctx.update.message.text;
-            bountyData.telegramUserId = ctx.update.message.from.id;
+            ctx.session.ethAddress = ctx.update.message.text;
+            ctx.session.telegramUserId = ctx.update.message.from.id;
 
-            ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`);
-            ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${bountyData.twitterNickName}\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${bountyData.telegramNickName}\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${bountyData.ethAddress}`, Markup.keyboard([
+            ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.changeData}`);
+            ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${ctx.session.twitterNickName}\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${ctx.session.telegramNickName}\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${ctx.session.ethAddress}`, Markup.keyboard([
                   Markup.callbackButton('Confirm data', 'next'),
                   Markup.callbackButton('Start over', 'next')
                 ]).oneTime().resize().extra())
@@ -486,16 +563,34 @@ const superWizard = new WizardScene('super-wizard',
           }
         })
         .catch(mongo_error => {
-          ctx.reply('Bot error, write /start to start over');
-          return ctx.scene.leave();
+          if(mongo_error.response !== undefined) {
+            if(mongo_error.response.error_code !== undefined) {
+              if(mongo_error.response.error_code === 403) {
+                return console.log('bot is blocked');
+              }
+            }
+          } else {
+            ctx.reply('Bot error, write /start to start over');
+            return ctx.scene.leave();
+          }
         })
+        return null;
       } else {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
       }
     } catch(error) {
-      ctx.reply('Bot error, write /start to start over');
-      return ctx.scene.leave();
+      if(error.response !== undefined) {
+        if(error.response.error_code !== undefined) {
+          if(error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      }
     }
+    return null;
   },
   (ctx) => {
     try {
@@ -519,97 +614,82 @@ const superWizard = new WizardScene('super-wizard',
       }
 
       if(botDataText === undefined) {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`);
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.changeData}`);
       }
 
       if(botDataText.substr(0, 1) === "/") {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.changeData}`)
       }
 
       if(botDataText === 'Confirm data') {
         if(referalId.split('/start ')[1] !== undefined && !isNaN(referalId.split('/start ')[1])) {
           Member.find({ telegramUserId: referalId.split('/start ')[1] })
           .exec()
-          .then(mongo_result => {
-            if(mongo_result.length !== 0) {
-              Member.find({ referalMembers: botDataFrom.id })
+          .then(result_find_user => {
+            if(result_find_user.length !== 0) {
+              Member.update({ telegramUserId: referalId.split('/start ')[1] }, {
+                $push: { referalMembers: ctx.session.telegramUserId }
+              })
               .exec()
-              .then(mongo_result_search => {
-                if(mongo_result_search.length === 0) {
-                  Member.update({ telegramUserId: referalId.split('/start ')[1] }, {
-                    $push: { referalMembers: botDataFrom.id }
-                  })
-                  .exec()
-                  .then(mongo_result_update => {
-                    let newMember = new Member({
-                      telegramUserId: bountyData.telegramUserId,
-                      twitterNickName: bountyData.twitterNickName,
-                      telegramNickName: bountyData.telegramNickName,
-                      ethAddress: bountyData.ethAddress,
-                      selectedLanguage: bountyData.selectedLanguage,
-                      referalMembers: bountyData.referalMembers
-                    });
-                    newMember
-                    .save()
-                    .then(mongo_result_create => {
-                      ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
-                        ['💰 Balance', '👥 My referals'],
-                        ['💾 My info', '❓ FAQ'],
-                        ['ℹ️ About Alehub', '⚙ Settings']
-                      ]).oneTime().resize().extra())
-                      return ctx.scene.leave()
-                    })
-                    .catch(mongo_error => {
-                      ctx.reply('Bot error, write /start to start over');
-                      return ctx.scene.leave();
-                    })
-                  })
-                  .catch(mongo_error => {
+              .then(result_update_user => {
+                let newMember = new Member({
+                  telegramUserId: ctx.session.telegramUserId,
+                  twitterNickName: ctx.session.twitterNickName,
+                  telegramNickName: ctx.session.telegramNickName,
+                  ethAddress: ctx.session.ethAddress,
+                  selectedLanguage: ctx.session.selectedLanguage,
+                  referalMembers: ctx.session.referalMembers
+                });
+                newMember
+                .save()
+                .then(mongo_result_create => {
+                  ctx.reply(`${translate[ctx.session.selectedLanguage].success.title}`, Markup.keyboard([
+                    ['💰 Balance', '👥 My referals'],
+                    ['💾 My info', '❓ FAQ'],
+                    ['ℹ️ About Alehub', '⚙ Settings']
+                  ]).oneTime().resize().extra())
+                  return ctx.scene.leave()
+                })
+                .catch(mongo_error => {
+                  if(mongo_error.response !== undefined) {
+                    if(mongo_error.response.error_code !== undefined) {
+                      if(mongo_error.response.error_code === 403) {
+                        return console.log('bot is blocked');
+                      }
+                    }
+                  } else {
                     ctx.reply('Bot error, write /start to start over');
                     return ctx.scene.leave();
-                  })
-                } else {
-                  let newMember = new Member({
-                    telegramUserId: bountyData.telegramUserId,
-                    twitterNickName: bountyData.twitterNickName,
-                    telegramNickName: bountyData.telegramNickName,
-                    ethAddress: bountyData.ethAddress,
-                    selectedLanguage: bountyData.selectedLanguage,
-                    referalMembers: bountyData.referalMembers
-                  });
-                  newMember
-                  .save()
-                  .then(mongo_result_create => {
-                    ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
-                      ['💰 Balance', '👥 My referals'],
-                      ['💾 My info', '❓ FAQ'],
-                      ['ℹ️ About Alehub', '⚙ Settings']
-                    ]).oneTime().resize().extra())
-                    return ctx.scene.leave()
-                  })
-                  .catch(mongo_error => {
-                    ctx.reply('Bot error, write /start to start over');
-                    return ctx.scene.leave();
-                  })
-                }
+                  }
+                })
+                return null;
               })
               .catch(mongo_error => {
-                ctx.reply('Bot error, write /start to start over');
-                return ctx.scene.leave();
+                if(mongo_error.response !== undefined) {
+                  if(mongo_error.response.error_code !== undefined) {
+                    if(mongo_error.response.error_code === 403) {
+                      return console.log('bot is blocked');
+                    }
+                  }
+                } else {
+                  ctx.reply('Bot error, write /start to start over');
+                  return ctx.scene.leave();
+                }
               })
+              return null;
             } else {
               let newMember = new Member({
-                telegramUserId: bountyData.telegramUserId,
-                twitterNickName: bountyData.twitterNickName,
-                telegramNickName: bountyData.telegramNickName,
-                ethAddress: bountyData.ethAddress,
-                selectedLanguage: bountyData.selectedLanguage,
-                referalMembers: bountyData.referalMembers
+                telegramUserId: ctx.session.telegramUserId,
+                twitterNickName: ctx.session.twitterNickName,
+                telegramNickName: ctx.session.telegramNickName,
+                ethAddress: ctx.session.ethAddress,
+                selectedLanguage: ctx.session.selectedLanguage,
+                referalMembers: ctx.session.referalMembers
               });
               newMember
               .save()
               .then(mongo_result_create => {
-                ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
+                ctx.reply(`${translate[ctx.session.selectedLanguage].success.title}`, Markup.keyboard([
                   ['💰 Balance', '👥 My referals'],
                   ['💾 My info', '❓ FAQ'],
                   ['ℹ️ About Alehub', '⚙ Settings']
@@ -617,29 +697,46 @@ const superWizard = new WizardScene('super-wizard',
                 return ctx.scene.leave()
               })
               .catch(mongo_error => {
-                ctx.reply('Bot error, write /start to start over');
-                return ctx.scene.leave();
+                if(mongo_error.response !== undefined) {
+                  if(mongo_error.response.error_code !== undefined) {
+                    if(mongo_error.response.error_code === 403) {
+                      return console.log('bot is blocked');
+                    }
+                  }
+                } else {
+                  ctx.reply('Bot error, write /start to start over');
+                  return ctx.scene.leave();
+                }
               })
+              return null;
             }
           })
           .catch(mongo_error => {
-            ctx.reply('Bot error, write /start to start over');
-            return ctx.scene.leave();
+            if(mongo_error.response !== undefined) {
+              if(mongo_error.response.error_code !== undefined) {
+                if(mongo_error.response.error_code === 403) {
+                  return console.log('bot is blocked');
+                }
+              }
+            } else {
+              ctx.reply('Bot error, write /start to start over');
+              return ctx.scene.leave();
+            }
           })
-
+          return null;
         } else {
           let newMember = new Member({
-            telegramUserId: bountyData.telegramUserId,
-            twitterNickName: bountyData.twitterNickName,
-            telegramNickName: bountyData.telegramNickName,
-            ethAddress: bountyData.ethAddress,
-            selectedLanguage: bountyData.selectedLanguage,
-            referalMembers: bountyData.referalMembers
+            telegramUserId: ctx.session.telegramUserId,
+            twitterNickName: ctx.session.twitterNickName,
+            telegramNickName: ctx.session.telegramNickName,
+            ethAddress: ctx.session.ethAddress,
+            selectedLanguage: ctx.session.selectedLanguage,
+            referalMembers: ctx.session.referalMembers
           });
           newMember
           .save()
           .then(mongo_result_create => {
-            ctx.reply(`${translate[bountyData.selectedLanguage].success.title}`, Markup.keyboard([
+            ctx.reply(`${translate[ctx.session.selectedLanguage].success.title}`, Markup.keyboard([
               ['💰 Balance', '👥 My referals'],
               ['💾 My info', '❓ FAQ'],
               ['ℹ️ About Alehub', '⚙ Settings']
@@ -647,62 +744,107 @@ const superWizard = new WizardScene('super-wizard',
             return ctx.scene.leave()
           })
           .catch(mongo_error => {
-            ctx.reply('Bot error, write /start to start over');
-            return ctx.scene.leave();
+            if(mongo_error.response !== undefined) {
+              if(mongo_error.response.error_code !== undefined) {
+                if(mongo_error.response.error_code === 403) {
+                  return console.log('bot is blocked');
+                }
+              }
+            } else {
+              ctx.reply('Bot error, write /start to start over');
+              return ctx.scene.leave();
+            }
           })
+          return null;
         }
       } else if(botDataText === 'Start over') {
-        ctx.reply(`${translate[bountyData.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
+        ctx.reply(`${translate[ctx.session.selectedLanguage].startOver.title}`, Markup.removeKeyboard().extra())
         return ctx.scene.leave()
       } else {
-        return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.changeData}`)
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.changeData}`)
       }
     } catch(error) {
-      ctx.reply('Bot error, write /start to start over');
-      return ctx.scene.leave();
+      if(error.response !== undefined) {
+        if(error.response.error_code !== undefined) {
+          if(error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        ctx.reply('Bot error, write /start to start over');
+        return ctx.scene.leave();
+      }
     }
+    return null;
   }
 )
 
 superWizard.on('new_chat_members', (ctx) => {
+  try {
+    let botDataFrom = [];
+    let botDataChat = [];
 
-  let botDataFrom = [];
-  let botDataChat = [];
+    if (ctx.message !== undefined) {
+      botDataFrom = ctx.message.from;
+      botDataChat = ctx.message.chat;
+    } else if (ctx.update.callback_query !== undefined) {
+      botDataFrom = ctx.update.callback_query.from;
+      botDataChat = ctx.update.callback_query.message.chat;
+    } else if (ctx.update.message !== undefined) {
+      botDataFrom = ctx.update.message.from;
+      botDataChat = ctx.update.message.chat;
+    }
 
-  if (ctx.message !== undefined) {
-    botDataFrom = ctx.message.from;
-    botDataChat = ctx.message.chat;
-  } else if (ctx.update.callback_query !== undefined) {
-    botDataFrom = ctx.update.callback_query.from;
-    botDataChat = ctx.update.callback_query.message.chat;
-  } else if (ctx.update.message !== undefined) {
-    botDataFrom = ctx.update.message.from;
-    botDataChat = ctx.update.message.chat;
+    if(botDataChat.type !== 'private') {
+      return ctx.reply(`Hi, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
+    }
+  } catch (error) {
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      ctx.reply('Bot error, write /start to start over');
+      return ctx.scene.leave();
+    }
   }
-
-  if(botDataChat.type !== 'private') {
-    return ctx.reply(`Hi, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
-  }
+  return null;
 });
 
 superWizard.on('left_chat_member', (ctx) => {
-  let botDataFrom = [];
-  let botDataChat = [];
+  try {
+    let botDataFrom = [];
+    let botDataChat = [];
 
-  if (ctx.message !== undefined) {
-    botDataFrom = ctx.message.from;
-    botDataChat = ctx.message.chat;
-  } else if (ctx.update.callback_query !== undefined) {
-    botDataFrom = ctx.update.callback_query.from;
-    botDataChat = ctx.update.callback_query.message.chat;
-  } else if (ctx.update.message !== undefined) {
-    botDataFrom = ctx.update.message.from;
-    botDataChat = ctx.update.message.chat;
-  }
+    if (ctx.message !== undefined) {
+      botDataFrom = ctx.message.from;
+      botDataChat = ctx.message.chat;
+    } else if (ctx.update.callback_query !== undefined) {
+      botDataFrom = ctx.update.callback_query.from;
+      botDataChat = ctx.update.callback_query.message.chat;
+    } else if (ctx.update.message !== undefined) {
+      botDataFrom = ctx.update.message.from;
+      botDataChat = ctx.update.message.chat;
+    }
 
-  if(botDataChat.type !== 'private') {
-    return ctx.reply(`Goodbye, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
+    if(botDataChat.type !== 'private') {
+      return ctx.reply(`Goodbye, ${botDataFrom.first_name}!`, Markup.removeKeyboard().extra());
+    }
+  } catch (error) {
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      ctx.reply('Bot error, write /start to start over');
+      return ctx.scene.leave();
+    }
   }
+  return null;
 });
 
 superWizard.hears('FAQ', (ctx) => {
@@ -730,9 +872,9 @@ superWizard.hears('FAQ', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
 
-        ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
+        return ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -748,7 +890,7 @@ superWizard.hears('FAQ', (ctx) => {
         }
 
         if(totalUsersWithReferal >= totalTokensForBounty) {
-          bountyData.selectedLanguage = 'en'
+          ctx.session.selectedLanguage = 'en'
           return ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
               ['About Alehub', 'FAQ']
             ]).oneTime().resize().extra())
@@ -758,11 +900,29 @@ superWizard.hears('FAQ', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('About Alehub', (ctx) => {
@@ -790,9 +950,9 @@ superWizard.hears('About Alehub', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
 
-        ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+        return ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -808,8 +968,8 @@ superWizard.hears('About Alehub', (ctx) => {
         }
 
         if(totalUsersWithReferal >= totalTokensForBounty) {
-          bountyData.selectedLanguage = 'en'
-          ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+          ctx.session.selectedLanguage = 'en'
+          return ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
               ['About Alehub', 'FAQ']
             ]).oneTime().resize().extra())
         } else {
@@ -819,11 +979,29 @@ superWizard.hears('About Alehub', (ctx) => {
 
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('ℹ️ About Alehub', (ctx) => {
@@ -851,9 +1029,9 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
 
-        ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+        return ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -869,8 +1047,8 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
         }
 
         if(totalUsersWithReferal >= totalTokensForBounty) {
-          bountyData.selectedLanguage = 'en'
-          ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
+          ctx.session.selectedLanguage = 'en'
+          return ctx.reply(`👥 WELCOME TO OFFICIAL CHAT OF ALEHUB. THE FUTURE OF THE HR INDUSTRY! 👥\n\n👥 ALEHUB COMMUNITY 👥\n\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n\n👥  ⁉️ WHAT IS ALEHUB? 👥\n\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB PARTNERS 👥\n\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEA(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\n👥 ALEHUB IN MEDIA 👥\n\n📄 GOLOS: https://goo.gl/z3kNGP\n📄 Crypto.Pro {Russian language}: https://goo.gl/zdt3Z1\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!  🆕\n\n👥 ALEHUB. ATTRACTING BLOCKCHAIN TECHNOLOGY IN THE WORLD OF HR 👥`, Markup.keyboard([
               ['About Alehub', 'FAQ']
             ]).oneTime().resize().extra())
         } else {
@@ -880,11 +1058,29 @@ superWizard.hears('ℹ️ About Alehub', (ctx) => {
 
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('❓ FAQ', (ctx) => {
@@ -912,9 +1108,9 @@ superWizard.hears('❓ FAQ', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage
 
-        ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
+        return ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -930,7 +1126,7 @@ superWizard.hears('❓ FAQ', (ctx) => {
         }
 
         if(totalUsersWithReferal >= totalTokensForBounty) {
-          bountyData.selectedLanguage = 'en'
+          ctx.session.selectedLanguage = 'en'
           return ctx.replyWithMarkdown('**Ask:** What distinguishes Alehub? from other similar projects?\n**Answer:** Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\n**Ask:** Is Ale coin ERC20-compliant?\n**Answer:** Yes\n\n**Ask:** How to create an ethereum wallet?\n**Answer:** visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub', Markup.keyboard([
               ['About Alehub', 'FAQ']
             ]).oneTime().resize().extra())
@@ -940,11 +1136,29 @@ superWizard.hears('❓ FAQ', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('💰 Balance', (ctx) => {
@@ -974,9 +1188,9 @@ superWizard.hears('💰 Balance', (ctx) => {
       if(mongo_result.length !== 0) {
         totalBalance = 30; //Minimal user balance for bounty;
         totalBalance = totalBalance+Number(mongo_result[0].referalMembers.length * 10); //Tokens for referals
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
 
-        ctx.reply(`${translate[bountyData.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[bountyData.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[ctx.session.selectedLanguage].userData.balance.subtitle}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -986,16 +1200,33 @@ superWizard.hears('💰 Balance', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('👥 My referals', (ctx) => {
   try {
-    let totalReferals = 0;
 
     let botDataFrom = [];
     let botDataChat = [];
@@ -1018,39 +1249,40 @@ superWizard.hears('👥 My referals', (ctx) => {
     Member.find({ telegramUserId: botDataFrom.id })
     .exec()
     .then(mongo_result => {
-      if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
+      ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+      let myReferalCount = 0;
+      myReferalCount = mongo_result[0].referalMembers.length;
 
-        let totalUsersWithReferal = 0;
-        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
-
-        for(let i=0;i<mongo_result.length;i++) {
-          if(mongo_result[i].referalMembers.length !== 0) {
-            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
-          }
-        }
-
-        if(totalUsersWithReferal >= totalTokensForBounty) {
-          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.isOver}`);
-        } else {
-          ctx.reply(`${translate[bountyData.selectedLanguage].bounty.referalLink} - ${botLink}=${ctx.update.message.from.id}`);
-        }
-
-        ctx.reply(`${translate[bountyData.selectedLanguage].bounty.invite.begin} ${totalReferals} ${translate[bountyData.selectedLanguage].bounty.invite.middle} ${totalReferals*10} ${translate[bountyData.selectedLanguage].bounty.invite.end}`, Markup.keyboard([
-          ['💰 Balance', '👥 My referals'],
-          ['💾 My info', '❓ FAQ'],
-          ['ℹ️ About Alehub', '⚙ Settings']
-        ]).oneTime().resize().extra())
-      } else {
-        return ctx.wizard.back();
-      }
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].bounty.invite.begin} ${myReferalCount} ${translate[ctx.session.selectedLanguage].bounty.invite.middle} ${myReferalCount*10} ${translate[ctx.session.selectedLanguage].bounty.invite.end} \n\n ${translate[ctx.session.selectedLanguage].bounty.referalLink} - ${botLink}?start=${botDataFrom.id}`, Markup.keyboard([
+            ['💰 Balance', '👥 My referals'],
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub', '⚙ Settings']
+          ]).oneTime().resize().extra());
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('⚙ Settings', (ctx) => {
@@ -1078,8 +1310,8 @@ superWizard.hears('⚙ Settings', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].settings.select}`, Markup.keyboard([
           ['🇺🇸 Change language', '⚙ Edit my details'],
           ['Come back']
         ]).oneTime().resize().extra())
@@ -1088,11 +1320,29 @@ superWizard.hears('⚙ Settings', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('⚙ Edit my details', (ctx) => {
@@ -1120,8 +1370,8 @@ superWizard.hears('⚙ Edit my details', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].settings.select}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].settings.select}`, Markup.keyboard([
           ['⚙ Edit twitter', '⚙ Edit ethereum address'],
           ['Come back']
         ]).oneTime().resize().extra())
@@ -1130,11 +1380,29 @@ superWizard.hears('⚙ Edit my details', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('Come back', (ctx) => {
@@ -1162,8 +1430,8 @@ superWizard.hears('Come back', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -1173,11 +1441,29 @@ superWizard.hears('Come back', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('💾 My info', (ctx) => {
@@ -1205,8 +1491,8 @@ superWizard.hears('💾 My info', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
-        ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+        return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
           ['💰 Balance', '👥 My referals'],
           ['💾 My info', '❓ FAQ'],
           ['ℹ️ About Alehub', '⚙ Settings']
@@ -1216,11 +1502,29 @@ superWizard.hears('💾 My info', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.command('/totalReferal', (ctx) => {
@@ -1248,7 +1552,7 @@ superWizard.command('/totalReferal', (ctx) => {
     .exec()
     .then(mongo_result => {
       if(mongo_result.length !== 0) {
-        bountyData.selectedLanguage = mongo_result[0].selectedLanguage;
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
         if(botDataFrom.username === 'voroncov' || botDataFrom.username === 'EcoMayDom' || botDataFrom.username === 'Mihall') {
 
           Member.find()
@@ -1263,18 +1567,26 @@ superWizard.command('/totalReferal', (ctx) => {
               }
             }
 
-            ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
+            return ctx.reply(`Members - ${membersCount}\n\nReferals - ${referalsCount}`, Markup.keyboard([
               ['💰 Balance', '👥 My referals'],
               ['💾 My info', '❓ FAQ'],
               ['ℹ️ About Alehub', '⚙ Settings']
             ]).oneTime().resize().extra())
           })
           .catch(mongo_error => {
-            return ctx.reply('Bot error, write /start to start over');
+            if(mongo_error.response !== undefined) {
+              if(mongo_error.response.error_code !== undefined) {
+                if(mongo_error.response.error_code === 403) {
+                  return console.log('bot is blocked');
+                }
+              }
+            } else {
+              return ctx.reply('Bot error, write /start to start over');
+            }
           })
-
+          return null;
         } else {
-          ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
             ['💰 Balance', '👥 My referals'],
             ['💾 My info', '❓ FAQ'],
             ['ℹ️ About Alehub', '⚙ Settings']
@@ -1285,11 +1597,29 @@ superWizard.command('/totalReferal', (ctx) => {
       }
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('🇺🇸 Change language', enter('changeLanguage'));
@@ -1305,8 +1635,17 @@ changeLanguageScene.enter((ctx) => {
       ['Deselect language']
     ]).oneTime().resize().extra())
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeLanguageScene.leave((ctx) => {
@@ -1333,18 +1672,36 @@ changeLanguageScene.leave((ctx) => {
     Member.find({ telegramUserId: botDataFrom.id })
     .exec()
     .then(mongo_result => {
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeLanguageScene.command('Deselect language', leave())
@@ -1395,24 +1752,51 @@ changeLanguageScene.on('text', (ctx) => {
     }})
     .exec()
     .then(mongo_result => {
-      bountyData.selectedLanguage = selectedLanguage;
-      ctx.reply(`${translate[bountyData.selectedLanguage].success.language}`)
+      ctx.session.selectedLanguage = selectedLanguage;
+      ctx.reply(`${translate[ctx.session.selectedLanguage].success.language}`)
       return ctx.scene.leave();
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeLanguageScene.on('message', (ctx) => {
   try {
-    ctx.reply('Only text messages please')
+    return ctx.reply('Only text messages please')
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('⚙ Edit twitter', enter('changeTwitter'));
@@ -1420,12 +1804,21 @@ const changetwitterScene = new Scene('changeTwitter');
 
 changetwitterScene.enter((ctx) => {
   try {
-    return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.new} https://twitter.com/alehub_io`, Markup.keyboard([
+    return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.new} https://twitter.com/alehub_io`, Markup.keyboard([
       ['Back']
     ]).oneTime().resize().extra())
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+     if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changetwitterScene.leave((ctx) => {
@@ -1452,18 +1845,36 @@ changetwitterScene.leave((ctx) => {
     Member.find({ telegramUserId: botDataFrom.id })
     .exec()
     .then(mongo_result => {
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over');
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changetwitterScene.command('back', leave());
@@ -1491,44 +1902,80 @@ changetwitterScene.on('text', (ctx) => {
 
     if(botDataText === 'Back') return ctx.scene.leave();
     if(botDataText.substr(0, 1) === "@") {
-      return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`)
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.correct}`)
     } else {
 
       Member.find({ twitterNickName: botDataText })
       .exec()
       .then(mongo_result => {
         if(mongo_result.length !== 0) {
-          ctx.reply(`${translate[bountyData.selectedLanguage].twitter.exist}`);
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.exist}`);
         } else {
           Member.update({ telegramUserId: botDataFrom.id }, { '$set': {
             twitterNickName: botDataText
           }})
           .exec()
           .then(mongo_result_update => {
-            bountyData.twitterNickName = botDataText;
-            ctx.reply(`${translate[bountyData.selectedLanguage].twitter.newTo} ${botDataText}`);
+            ctx.session.twitterNickName = botDataText;
+            ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.newTo} ${botDataText}`);
             return ctx.scene.leave();
           })
           .catch(mongo_error => {
-            return ctx.reply('Bot error, write /start to start over');
+            if(mongo_error.response !== undefined) {
+              if(mongo_error.response.error_code !== undefined) {
+                if(mongo_error.response.error_code === 403) {
+                  return console.log('bot is blocked');
+                }
+              }
+            } else {
+              return ctx.reply('Bot error, write /start to start over');
+            }
           })
+          return null;
         }
       })
       .catch(mongo_error => {
-        return ctx.reply('Bot error, write /start to start over');
+        if(mongo_error.response !== undefined) {
+          if(mongo_error.response.error_code !== undefined) {
+            if(mongo_error.response.error_code === 403) {
+              return console.log('bot is blocked');
+            }
+          }
+        } else {
+          return ctx.reply('Bot error, write /start to start over');
+        }
       })
+      return null;
     }
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changetwitterScene.on('message', (ctx) => {
   try {
-    return ctx.reply(`${translate[bountyData.selectedLanguage].twitter.correct}`);
+    return ctx.reply(`${translate[ctx.session.selectedLanguage].twitter.correct}`);
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 superWizard.hears('⚙ Edit ethereum address', enter('changeEth'));
@@ -1536,12 +1983,21 @@ const changeEthereumScene = new Scene('changeEth');
 
 changeEthereumScene.enter((ctx) => {
   try {
-    ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.new}`, Markup.keyboard([
+    return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.new}`, Markup.keyboard([
       ['Back']
     ]).oneTime().resize().extra())
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeEthereumScene.leave((ctx) => {
@@ -1568,18 +2024,36 @@ changeEthereumScene.leave((ctx) => {
     Member.find({ telegramUserId: botDataFrom.id })
     .exec()
     .then(mongo_result => {
-      ctx.reply(`${translate[bountyData.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[bountyData.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, Markup.keyboard([
         ['💰 Balance', '👥 My referals'],
         ['💾 My info', '❓ FAQ'],
         ['ℹ️ About Alehub', '⚙ Settings']
       ]).oneTime().resize().extra())
     })
     .catch(mongo_error => {
-      return ctx.reply('Bot error, write /start to start over')
+      if(mongo_error.response !== undefined) {
+        if(mongo_error.response.error_code !== undefined) {
+          if(mongo_error.response.error_code === 403) {
+            return console.log('bot is blocked');
+          }
+        }
+      } else {
+        return ctx.reply('Bot error, write /start to start over');
+      }
     })
+    return null;
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeEthereumScene.hears('Back', leave());
@@ -1610,42 +2084,78 @@ changeEthereumScene.on('text', (ctx) => {
       .exec()
       .then(mongo_result => {
         if(mongo_result.length !== 0) {
-          ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.exist}`);
+          return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.exist}`);
         } else {
           Member.update({ telegramUserId: botDataFrom.id }, { '$set': {
             ethAddress: botDataText
           }})
           .exec()
           .then(mongo_result_update => {
-            bountyData.ethAddress = botDataText;
-            ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.newTo} ${botDataText}`);
+            ctx.session.ethAddress = botDataText;
+            ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.newTo} ${botDataText}`);
             return ctx.scene.leave();
           })
           .catch(mongo_error => {
-            return ctx.reply('Bot error, write /start to start over');
+            if(mongo_error.response !== undefined) {
+              if(mongo_error.response.error_code !== undefined) {
+                if(mongo_error.response.error_code === 403) {
+                  return console.log('bot is blocked');
+                }
+              }
+            } else {
+              return ctx.reply('Bot error, write /start to start over');
+            }
           })
+          return null;
         }
       })
       .catch(mongo_error => {
-        return ctx.reply('Bot error, write /start to start over');
+        if(mongo_error.response !== undefined) {
+          if(mongo_error.response.error_code !== undefined) {
+            if(mongo_error.response.error_code === 403) {
+              return console.log('bot is blocked');
+            }
+          }
+        } else {
+          return ctx.reply('Bot error, write /start to start over');
+        }
       })
+      return null;
     } else {
-      return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+      return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
     }
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 changeEthereumScene.on('message', (ctx) => {
   try {
-    return ctx.reply(`${translate[bountyData.selectedLanguage].ethereum.correct}`);
+    return ctx.reply(`${translate[ctx.session.selectedLanguage].ethereum.correct}`);
   } catch(error) {
-    return ctx.reply('Bot error, write /start to start over')
+    if(error.response !== undefined) {
+      if(error.response.error_code !== undefined) {
+        if(error.response.error_code === 403) {
+          return console.log('bot is blocked');
+        }
+      }
+    } else {
+      return ctx.reply('Bot error, write /start to start over');
+    }
   }
+  return null;
 });
 
 const stage = new Stage([changeEthereumScene, superWizard, changetwitterScene, changeLanguageScene], { default: 'super-wizard' })
-bot.use(session())
+
 bot.use(stage.middleware())
 bot.startPolling()
