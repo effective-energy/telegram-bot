@@ -197,7 +197,7 @@ const bountyWizard = new WizardScene('bounty-wizard',
             let botDataFrom = parseBotDataFrom(ctx);
             let botDataChat = parseBotDataChat(ctx);
             let botDataText = parseBotDataText(ctx);
-
+            
             if (botDataChat.type !== 'private') {
                 return false;
             }
