@@ -8,6 +8,18 @@ const SHA3 = require('crypto-js/sha3');
 const Scene = require('telegraf/scenes/base');
 const { enter, leave } = Stage;
 const { mount, filter } = require('telegraf');
+const { Extra } = require('telegraf');
+
+let ml_config = {
+  api_key: ''
+};
+
+const Mailerlite = require('mailerlite-nodejs-api');
+const ml = new Mailerlite(ml_config.api_key);
+
+let ml_subscribe = ml.subscribers;
+let ml_campaigns = ml.campaigns;
+let ml_lists = ml.lists;
 
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/members');
@@ -25,7 +37,9 @@ let membersSchema = mongoose.Schema({
     telegramNickName: { type: String, required: true },
     ethAddress: { type: String, required: true },
     selectedLanguage: { type: String, required: true },
-    referalMembers: { type: Array, required: true }
+    referalMembers: { type: Array, required: true },
+    isGetMoreToken: { type: Boolean, required: false },
+    userEmail: { type: String, required: false }
 });
 
 let Member = mongoose.model('Member', membersSchema);
@@ -65,9 +79,10 @@ function isChecksumAddress (address) {
 
 let referalId = 0;
 let botLink = '';
-let chatId = '';
+let chatId = 0;
 let totalTokensForBounty = 2200000;
 let isDown = false;
+let channelId = 0;
 
 const parseBotDataFrom = (data) => {
     if (data.message !== undefined) {
@@ -133,20 +148,38 @@ const parseSelecredLanguage = (ctx, selectedLanguage) => {
     }
 };
 
-const activeMemberResponse = (ctx, message) => {
-    return ctx.reply(message, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub', '⚙ Settings']
-        ]).oneTime().resize().extra());
+const activeMemberResponse = (ctx, message, isGetMoreToken) => {
+    if (isGetMoreToken === true) {
+        return ctx.reply(message, Markup.keyboard([
+            ['💰 Balance', '👥 My referals'],
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra());
+    } else {
+        return ctx.reply(message, Markup.keyboard([
+            ['💵 Get 10 more ALE-tokens'],
+            ['💰 Balance', '👥 My referals'],
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra());
+    }
 };
 
-const activeMemberResponseMarkdown = (ctx, message) => {
-    return ctx.replyWithMarkdown(message, Markup.keyboard([
-        ['💰 Balance', '👥 My referals'],
-        ['💾 My info', '❓ FAQ'],
-        ['ℹ️ About Alehub', '⚙ Settings']
-        ]).oneTime().resize().extra());
+const activeMemberResponseMarkdown = (ctx, message, isGetMoreToken) => {
+    if (isGetMoreToken === true) {
+        return ctx.replyWithMarkdown(message, Markup.keyboard([
+            ['💰 Balance', '👥 My referals'],
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra());
+    } else {
+        return ctx.replyWithMarkdown(message, Markup.keyboard([
+            ['💵 Get 10 more ALE-tokens'],
+            ['💰 Balance', '👥 My referals'],
+            ['💾 My info', '❓ FAQ'],
+            ['ℹ️ About Alehub', '⚙ Settings']
+            ]).oneTime().resize().extra());
+    }
 };
 
 const joinUserToBounty = (ctx) => {
@@ -161,7 +194,7 @@ const joinUserToBounty = (ctx) => {
 
     newMember.save()
     .then(mongo_result => {
-        activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].success.title}`);
+        activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].success.title}`, false);
         return ctx.scene.leave();
     })
     .catch(mongo_error => {
@@ -189,6 +222,11 @@ const selectedLanguageHandler = (ctx, language) => {
         return 'none';
     }
 };
+
+const validateEmail = (email) => {
+    var regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return regex.test(String(email).toLowerCase());
+}
 
 const bountyWizard = new WizardScene('bounty-wizard',
     (ctx, next) => {
@@ -230,34 +268,47 @@ const bountyWizard = new WizardScene('bounty-wizard',
             .then(mongo_result => {
                 if (mongo_result.length !== 0) {
                     ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                    return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                    return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
                 } else {
-                    let totalUsersWithReferal = 0;
-                    totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result.length*30);
+                    Member.find()
+                    .exec()
+                    .then(mongo_result_search => {
+                        let totalUsersWithReferal = 0;
+                        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result_search.length*30);
 
-                    for (let i=0;i<mongo_result.length;i++) {
-                        if (mongo_result[i].referalMembers.length !== 0) {
-                            totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result[i].referalMembers.length*10);
+                        for (let i=0;i<mongo_result_search.length;i++) {
+                            if (mongo_result_search[i].referalMembers.length !== 0) {
+                                totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result_search[i].referalMembers.length*10);
+                            }
+                            if (mongo_result_search[i].isGetMoreToken !== undefined) {
+                                if (mongo_result_search[i].isGetMoreToken === true) {
+                                    totalUsersWithReferal = totalUsersWithReferal+10;
+                                }
+                            }
                         }
-                    }
 
-                    if (totalUsersWithReferal >= totalTokensForBounty) {
-                        return ctx.reply('Bounty program is over', Markup.removeKeyboard().extra());
-                    } else {
-                        if (!isDown) {
-                            referalId = botDataText;
+                        if (totalUsersWithReferal >= totalTokensForBounty) {
+                            return ctx.reply('Bounty program is over', Markup.removeKeyboard().extra());
+                        } else {
+                            if (!isDown) {
+                                referalId = botDataText;
+                            }
+                            ctx.reply('Select language', Markup.keyboard([
+                                Markup.callbackButton('🇺🇸 English', 'next'),
+                                Markup.callbackButton('🇷🇺 Russian', 'next'),
+                                Markup.callbackButton('🇨🇳 Chinese', 'next'),
+                                Markup.callbackButton('🇩🇪 German', 'next'),
+                                Markup.callbackButton('🇪🇸 Spanish', 'next'),
+                                Markup.callbackButton('🇰🇷 Korean', 'next'),
+                                Markup.callbackButton('🇯🇵 Japanese', 'next')
+                                ]).oneTime().resize().extra());
+                            return ctx.wizard.next();
                         }
-                        ctx.reply('Select language', Markup.keyboard([
-                            Markup.callbackButton('🇺🇸 English', 'next'),
-                            Markup.callbackButton('🇷🇺 Russian', 'next'),
-                            Markup.callbackButton('🇨🇳 Chinese', 'next'),
-                            Markup.callbackButton('🇩🇪 German', 'next'),
-                            Markup.callbackButton('🇪🇸 Spanish', 'next'),
-                            Markup.callbackButton('🇰🇷 Korean', 'next'),
-                            Markup.callbackButton('🇯🇵 Japanese', 'next')
-                            ]).oneTime().resize().extra());
-                        return ctx.wizard.next();
-                    }
+                    })
+                    .catch((mongo_error) => {
+                        console.log('mongo_error', mongo_error.response.error_code);
+                        return next();
+                    })
                 }
             })
             .catch((mongo_error) => {
@@ -492,6 +543,198 @@ const bountyWizard = new WizardScene('bounty-wizard',
     }
 );
 
+// Get more tokens scene //
+
+bountyWizard.hears('💵 Get 10 more ALE-tokens', (ctx, next) => {
+    new Promise (function(resolve, reject) {
+
+        let botDataFrom = parseBotDataFrom(ctx);
+        let botDataChat = parseBotDataChat(ctx);
+        let botDataText = parseBotDataText(ctx);
+
+        if (botDataChat.type !== 'private') {
+            return false;
+        }
+
+        ctx.session.isGetTokenStepOneSuccess = false;
+
+        Member.find({ telegramUserId: botDataFrom.id })
+        .exec()
+        .then(mongo_result => {
+            if (mongo_result.length !== 0) {
+                ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+                if (mongo_result[0].isGetMoreToken) {
+                    ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+                    return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
+                } else {
+                    Member.find()
+                    .exec()
+                    .then(mongo_result_search => {
+                        let totalUsersWithReferal = 0;
+                        totalUsersWithReferal = Number(totalUsersWithReferal)+Number(mongo_result_search.length*30);
+
+                        for (let i=0;i<mongo_result_search.length;i++) {
+                            if (mongo_result_search[i].referalMembers.length !== 0) {
+                                totalUsersWithReferal = totalUsersWithReferal+Number(mongo_result_search[i].referalMembers.length*10);
+                            }
+
+                            if (mongo_result_search[i].isGetMoreToken !== undefined) {
+                                if (mongo_result_search[i].isGetMoreToken === true) {
+                                    totalUsersWithReferal = totalUsersWithReferal+10;
+                                }
+                            }
+                        }
+
+                        if (totalUsersWithReferal >= totalTokensForBounty) {
+                            return ctx.reply('Bounty program is over', Markup.removeKeyboard().extra());
+                        } else {
+                            return ctx.scene.enter('getMoreTokens');
+                        }
+                    })
+                    .catch(mongo_error => {
+                        console.log('error', mongo_error.response.error_code);
+                        return next();
+                    })
+                }
+            } else {
+                return ctx.wizard.back();
+            }
+        })
+        .catch(mongo_error => {
+            console.log('error', mongo_error.response.error_code);
+            return next();
+        })
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
+});
+
+const getMoreTokensScene = new Scene('getMoreTokens');
+
+getMoreTokensScene.enter((ctx, next) => {
+    new Promise (function(resolve, reject) {
+        ctx.session.isGetTokenStepOneSuccess = false;
+        ctx.reply('The first step: subscribe to our news channel @alehubnews', Markup.inlineKeyboard([
+            Markup.urlButton('Subscribe to channel', 'https://t.me/alehubnews')
+            ]).oneTime().resize().extra());
+
+        setTimeout(function() {
+            return ctx.reply('Select an action on the buttons', Markup.keyboard([
+                ['➡️ Next'],
+                ['❌ Cancel']
+                ]).oneTime().resize().extra());
+        }, 100);
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
+});
+
+getMoreTokensScene.hears('➡️ Next', (ctx, next) => {
+    new Promise (function(resolve, reject) {
+        let botDataFrom = parseBotDataFrom(ctx);
+        let botDataChat = parseBotDataChat(ctx);
+        let botDataText = parseBotDataText(ctx);
+
+        ctx.telegram.getChatMember(channelId, botDataFrom.id).then(result => {
+            if (result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
+                return ctx.reply('You did not subscribe to our news channel', Markup.keyboard([
+                    ['➡️ Next'],
+                    ['❌ Cancel']
+                    ]).oneTime().resize().extra());
+            } else {
+                ctx.session.isGetTokenStepOneSuccess = true;
+                return ctx.reply('The last step: subscribe to our newsletter through our website in the form below');
+            }
+        });
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
+});
+
+getMoreTokensScene.hears('❌ Cancel', (ctx, next) => {
+    activeMemberResponse(ctx, 'Cancel receipt of tokens', false);
+    return ctx.scene.leave();
+});
+
+getMoreTokensScene.on('text', (ctx, next) => {
+    new Promise (function(resolve, reject) {
+        let botDataText = parseBotDataText(ctx);
+        let botDataFrom = parseBotDataFrom(ctx);
+
+        if (ctx.session.isGetTokenStepOneSuccess) {
+            if (validateEmail(botDataText)) {
+
+                ml_subscribe.get(botDataText, true, function (response_check_exist) {
+                    if(!response_check_exist.success) {
+                        return ctx.reply('You did not subscribe to the newsletter on our website');
+                    } else {
+                        Member.find({ telegramUserId: botDataFrom.id })
+                        .exec()
+                        .then(mongo_result => {
+                            if (mongo_result.length !== 0) {
+                                Member.find({ userEmail: botDataText })
+                                .exec()
+                                .then(mongo_result_search => {
+                                    if (mongo_result_search.length === 0) {
+                                        Member.update({ telegramUserId: mongo_result[0].telegramUserId }, { '$set': {
+                                            isGetMoreToken: true,
+                                            userEmail: botDataText
+                                        }})
+                                        .exec()
+                                        .then(mongo_result_update => {
+                                            ctx.session.isGetTokenStepOneSuccess = false;
+                                            activeMemberResponse(ctx, '10 ALE-tokens have been sent to your balance!', true);
+                                            return ctx.scene.leave();
+                                        })
+                                        .catch(mongo_error => {
+                                            console.log('error', mongo_error.response.error_code);
+                                            return next();
+                                        })
+                                    } else {
+                                        ctx.reply('Email already exist');
+                                        return ctx.scene.leave();
+                                    }
+                                })
+                                .catch(mongo_error => {
+                                    console.log('error', mongo_error.response.error_code);
+                                    return next();
+                                })
+                            } else {
+                                ctx.scene.leave();
+                                return activeMemberResponse(ctx, 'Bot error, please try again', false);
+                            }
+                        })
+                        .catch(mongo_error => {
+                            console.log('error', mongo_error.response.error_code);
+                            return next();
+                        })
+                    }
+                });
+            } else {
+                return ctx.reply('E-mail not valid')
+            }
+        } else {
+            return ctx.reply('Please select the action on the buttons');
+        }
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
+});
+
+getMoreTokensScene.on('Please select the action on the buttons', (ctx, next) => {
+    return ctx.reply('Only button please');
+});
+
+// Get more tokens scene //
+
 bountyWizard.hears('💰 Balance', (ctx, next) => {
     new Promise (function(resolve, reject) {
 
@@ -510,7 +753,10 @@ bountyWizard.hears('💰 Balance', (ctx, next) => {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
                 totalBalance = 30;
                 totalBalance = totalBalance+Number(mongo_result[0].referalMembers.length * 10);
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[ctx.session.selectedLanguage].userData.balance.subtitle}`);
+                if (mongo_result[0].isGetMoreToken !== undefined && mongo_result[0].isGetMoreToken === true) {
+                    totalBalance = Number(totalBalance)+Number(10)
+                }
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[ctx.session.selectedLanguage].userData.balance.subtitle}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -563,7 +809,7 @@ bountyWizard.hears('👥 My referals', (ctx, next) => {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
                 let myReferalCount = 0;
                 myReferalCount = mongo_result[0].referalMembers.length;
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].bounty.invite.begin} ${myReferalCount} ${translate[ctx.session.selectedLanguage].bounty.invite.middle} ${myReferalCount*10} ${translate[ctx.session.selectedLanguage].bounty.invite.end} \n\n ${translate[ctx.session.selectedLanguage].bounty.referalLink} - ${botLink}?start=${botDataFrom.id}`);
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].bounty.invite.begin} ${myReferalCount} ${translate[ctx.session.selectedLanguage].bounty.invite.middle} ${myReferalCount*10} ${translate[ctx.session.selectedLanguage].bounty.invite.end} \n\n ${translate[ctx.session.selectedLanguage].bounty.referalLink} - ${botLink}?start=${botDataFrom.id}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -595,7 +841,7 @@ bountyWizard.hears('💾 My info', (ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -630,7 +876,7 @@ bountyWizard.hears('❓ FAQ', (ctx, next) => {
                 Info.find({ infoType: 'faq' })
                 .exec()
                 .then(mongo_result_info => {
-                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText);
+                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText, mongo_result[0].isGetMoreToken, mongo_result[0].isGetMoreToken);
                 })
                 .catch(mongo_error => {
                     console.log('mongo_error', mongo_error.response.error_code);
@@ -670,7 +916,7 @@ bountyWizard.hears('ℹ️ About Alehub', (ctx, next) => {
                 Info.find({ infoType: 'about' })
                 .exec()
                 .then(mongo_result_info => {
-                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText);
+                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText, mongo_result[0].isGetMoreToken);
                 })
                 .catch(mongo_error => {
                     console.log('mongo_error', mongo_error.response.error_code);
@@ -766,7 +1012,7 @@ changeLanguageScene.leave((ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -852,7 +1098,7 @@ bountyWizard.hears('Come back', (ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -941,7 +1187,7 @@ changetwitterScene.leave((ctx, next) => {
         Member.find({ telegramUserId: botDataFrom.id })
         .exec()
         .then(mongo_result => {
-            return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+            return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
         })
         .catch(mongo_error => {
             console.log('mongo_error', mongo_error.response.error_code);
@@ -1056,7 +1302,7 @@ changeEthereumScene.leave((ctx, next) => {
         Member.find({ telegramUserId: botDataFrom.id })
         .exec()
         .then(mongo_result => {
-            return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+            return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
         })
         .catch(mongo_error => {
             console.log('mongo_error', mongo_error.response.error_code);
@@ -1157,14 +1403,14 @@ bountyWizard.command('/totalReferal', (ctx, next) => {
                                 referalsCount = referalsCount+1;
                             }
                         }
-                        return activeMemberResponse(ctx, `Members - ${totalMembersCount}\n\nReferals - ${referalsCount}`);
+                        return activeMemberResponse(ctx, `Members - ${totalMembersCount}\n\nReferals - ${referalsCount}`, mongo_result[0].isGetMoreToken);
                     })
                     .catch(mongo_total_error => {
                         console.log('mongo_error', mongo_error);
                         return next();
                     })
                 } else {
-                    return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                    return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
                 }
             } else {
                 return ctx.wizard.back();
@@ -1197,7 +1443,7 @@ bountyWizard.command('/start', (ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`);
+                return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
             } else {
                 if (botDataText.split('/start ')[1] === undefined) {
                     ctx.scene.leave();
@@ -1222,6 +1468,59 @@ bountyWizard.command('/start', (ctx, next) => {
 });
 
 const bot = new Telegraf("");
+let index = 0;
+
+function sendMessageToTwitter (ctx, next, text, count) {
+        if (index >= count) {
+                index = 0;
+                return bot.telegram.sendMessage(73679622, 'BOT DONE SLETTER!');
+        }
+        new Promise (function(resolve, reject) {
+                setTimeout(function() {
+                        Member.find().skip(index).limit(1)
+                        .exec()
+                        .then(result => {
+                                bot.telegram.sendMessage(result[0].telegramUserId, text);
+                                index = Number(index)+Number(1);
+                                return sendMessageToTwitter(ctx, next, text, count)
+                        })
+                        .catch(err => {
+                                return console.log('error count')
+                        })
+                }, 60)
+        })
+        .catch ((error) => {
+                sendMessageToTwitter(ctx, next, text, count);
+                index = Number(index)+Number(1);
+                return next();
+        });
+}
+
+function getMongooseCount(ctx, next, text) {
+        Member.count()
+        .exec()
+        .then(result => {
+                let count = Number(result);
+                return sendMessageToTwitter(ctx, next, text, count);
+        })
+        .catch(err => {
+                return console.log('error count')
+        })
+}
+
+const regex = new RegExp(/newmail (.+)/i);
+
+bot.hears(regex, (ctx, next) => { 
+        let text = parseBotDataText(ctx);
+        let from = parseBotDataFrom(ctx);
+        let chat = parseBotDataChat(ctx);
+
+        if (chat.type !== 'private') return false;
+        if (from.username !== 'voroncov') return false;
+
+        let parseText = text.substr(6);
+        return getMongooseCount(ctx, next, parseText);
+});
 
 bot.catch((err) => {
     console.log('Error', err)
@@ -1235,7 +1534,7 @@ process.on('unhandledRejection', (reason, p) => {
     }
 });
 
-const stage = new Stage([bountyWizard, changeLanguageScene, changetwitterScene, changeEthereumScene], { default: 'bounty-wizard' });
+const stage = new Stage([bountyWizard, changeLanguageScene, changetwitterScene, changeEthereumScene, getMoreTokensScene], { default: 'bounty-wizard' });
 bot.use(session());
 bot.use(stage.middleware());
 bot.startPolling();
