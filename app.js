@@ -11,7 +11,8 @@ const { mount, filter } = require('telegraf');
 const { Extra } = require('telegraf');
 
 let ml_config = {
-  api_key: ''
+  api_key: '',
+  group_id: ''
 };
 
 const Mailerlite = require('mailerlite-nodejs-api');
@@ -22,7 +23,7 @@ let ml_campaigns = ml.campaigns;
 let ml_lists = ml.lists;
 
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/members');
+mongoose.connect('');
 let db = mongoose.connection;
 db.on('error', function() {
     console.log('Error connection to MongoDB');
@@ -79,10 +80,10 @@ function isChecksumAddress (address) {
 
 let referalId = 0;
 let botLink = '';
-let chatId = 0;
-let totalTokensForBounty = 2200000;
+let chatId = '';
+let totalTokensForBounty = '';
 let isDown = false;
-let channelId = 0;
+let channelId = '';
 
 const parseBotDataFrom = (data) => {
     if (data.message !== undefined) {
@@ -237,6 +238,9 @@ const bountyWizard = new WizardScene('bounty-wizard',
             let botDataText = parseBotDataText(ctx);
             
             if (botDataChat.type !== 'private') {
+                if (isAddress(botDataText)) {
+                    ctx.tg.deleteMessage(ctx.chat.id, ctx.message.message_id);
+                }
                 return false;
             }
 
@@ -622,8 +626,7 @@ getMoreTokensScene.enter((ctx, next) => {
 
         setTimeout(function() {
             return ctx.reply('Select an action on the buttons', Markup.keyboard([
-                ['➡️ Next'],
-                ['❌ Cancel']
+                ['❌ Cancel', '➡️ Next']
                 ]).oneTime().resize().extra());
         }, 100);
     })
@@ -642,12 +645,11 @@ getMoreTokensScene.hears('➡️ Next', (ctx, next) => {
         ctx.telegram.getChatMember(channelId, botDataFrom.id).then(result => {
             if (result.status !== 'member' && result.status !== 'creator' && result.status !== 'administrator') {
                 return ctx.reply('You did not subscribe to our news channel', Markup.keyboard([
-                    ['➡️ Next'],
-                    ['❌ Cancel']
+                    ['❌ Cancel', '➡️ Next']
                     ]).oneTime().resize().extra());
             } else {
                 ctx.session.isGetTokenStepOneSuccess = true;
-                return ctx.reply('The last step: subscribe to our newsletter through our website in the form below');
+                return ctx.reply('The last step: subscribe to our newsletter. Specify the address of your email.', Markup.removeKeyboard().extra());
             }
         });
     })
@@ -670,50 +672,50 @@ getMoreTokensScene.on('text', (ctx, next) => {
         if (ctx.session.isGetTokenStepOneSuccess) {
             if (validateEmail(botDataText)) {
 
-                ml_subscribe.get(botDataText, true, function (response_check_exist) {
-                    if(!response_check_exist.success) {
-                        return ctx.reply('You did not subscribe to the newsletter on our website');
-                    } else {
-                        Member.find({ telegramUserId: botDataFrom.id })
-                        .exec()
-                        .then(mongo_result => {
-                            if (mongo_result.length !== 0) {
-                                Member.find({ userEmail: botDataText })
-                                .exec()
-                                .then(mongo_result_search => {
-                                    if (mongo_result_search.length === 0) {
-                                        Member.update({ telegramUserId: mongo_result[0].telegramUserId }, { '$set': {
-                                            isGetMoreToken: true,
-                                            userEmail: botDataText
-                                        }})
-                                        .exec()
-                                        .then(mongo_result_update => {
-                                            ctx.session.isGetTokenStepOneSuccess = false;
-                                            activeMemberResponse(ctx, '10 ALE-tokens have been sent to your balance!', true);
-                                            return ctx.scene.leave();
-                                        })
-                                        .catch(mongo_error => {
-                                            console.log('error', mongo_error.response.error_code);
-                                            return next();
-                                        })
-                                    } else {
-                                        ctx.reply('Email already exist');
-                                        return ctx.scene.leave();
-                                    }
-                                })
-                                .catch(mongo_error => {
-                                    console.log('error', mongo_error.response.error_code);
-                                    return next();
-                                })
-                            } else {
-                                ctx.scene.leave();
-                                return activeMemberResponse(ctx, 'Bot error, please try again', false);
+                ml_subscribe.get(botDataText, true, function (response_subscribe) {
+                    if (response_subscribe.data !== undefined) {
+                        if (response_subscribe.data.status !== undefined) {
+                            if (response_subscribe.data.status === 'unconfirmed') {
+                                return ctx.reply('Email not verified, please open an email, which we sent to this address and click on the link.')
                             }
-                        })
-                        .catch(mongo_error => {
-                            console.log('error', mongo_error.response.error_code);
-                            return next();
-                        })
+                        }
+                    }
+                    if(response_subscribe.success) {
+                        return ctx.reply('Email already exist');
+                    } else {
+                        ml_subscribe.setId(ml_config.group_id).add({
+                            form: {
+                                'email': botDataText
+                            }
+                        }, 1 ,function(response_subscribe) {
+                            Member.find({ telegramUserId: botDataFrom.id })
+                            .exec()
+                            .then(mongo_result => {
+                                if (mongo_result.length !== 0) {
+                                    Member.update({ telegramUserId: mongo_result[0].telegramUserId }, { '$set': {
+                                        isGetMoreToken: true,
+                                        userEmail: botDataText
+                                    }})
+                                    .exec()
+                                    .then(mongo_result_update => {
+                                        ctx.session.isGetTokenStepOneSuccess = false;
+                                        activeMemberResponse(ctx, 'A confirmation letter has been sent to your e-mail.', true);
+                                        return ctx.scene.leave();
+                                    })
+                                    .catch(mongo_error_update => {
+                                        console.log('error', mongo_error.response.error_code);
+                                        return next();
+                                    })
+                                } else {
+                                    activeMemberResponse(ctx, 'Bot error, please try again', false);
+                                    return ctx.scene.leave();
+                                }
+                            })
+                            .catch(mongo_error => {
+                                console.log('error', mongo_error.response.error_code);
+                                return next();
+                            })
+                        });
                     }
                 });
             } else {
