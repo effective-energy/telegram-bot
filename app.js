@@ -547,6 +547,34 @@ const bountyWizard = new WizardScene('bounty-wizard',
     }
 );
 
+bountyWizard.command('getMore', (ctx, next) => {
+    new Promise (function(resolve, reject) {
+
+        let botDataFrom = parseBotDataFrom(ctx);
+        let botDataChat = parseBotDataChat(ctx);
+        let botDataText = parseBotDataText(ctx);
+
+        if (botDataFrom.username === 'voroncov') {
+            Member.find({isGetMoreToken: true})
+            .exec()
+            .then(mongo_result => {
+                return ctx.reply(`Total: ${mongo_result.length}`)
+            })
+            .catch(mongo_error => {
+                console.log('error', mongo_error.response.error_code);
+                return next();
+            })
+            return ctx.reply('Done!', Markup.removeKeyboard().extra());
+        } else {
+            return false;
+        }
+    })
+    .catch ((error) => {
+        console.log('error', error);
+        return next();
+    });
+});
+
 // Get more tokens scene //
 
 bountyWizard.hears('💵 Get 10 more ALE-tokens', (ctx, next) => {
