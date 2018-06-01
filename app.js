@@ -40,7 +40,8 @@ let membersSchema = mongoose.Schema({
     selectedLanguage: { type: String, required: true },
     referalMembers: { type: Array, required: true },
     isGetMoreToken: { type: Boolean, required: false },
-    userEmail: { type: String, required: false }
+    userEmail: { type: String, required: false },
+    noTwitter: { type: Boolean, required: false }
 });
 
 let Member = mongoose.model('Member', membersSchema);
@@ -78,11 +79,11 @@ function isChecksumAddress (address) {
     return true;
 };
 
-let referalId = 0;
+let referalId = '';
 let botLink = '';
 let chatId = '';
 let totalTokensForBounty = '';
-let isDown = false;
+let isDown = '';
 let channelId = '';
 
 const parseBotDataFrom = (data) => {
@@ -150,37 +151,21 @@ const parseSelecredLanguage = (ctx, selectedLanguage) => {
 };
 
 const activeMemberResponse = (ctx, message, isGetMoreToken) => {
-    if (isGetMoreToken === true) {
-        return ctx.reply(message, Markup.keyboard([
-            ['💰 Balance', '👥 My referals'],
-            ['💾 My info', '❓ FAQ'],
-            ['ℹ️ About Alehub', '⚙ Settings']
-            ]).oneTime().resize().extra());
-    } else {
-        return ctx.reply(message, Markup.keyboard([
-            ['💵 Get 10 more ALE-tokens'],
-            ['💰 Balance', '👥 My referals'],
-            ['💾 My info', '❓ FAQ'],
-            ['ℹ️ About Alehub', '⚙ Settings']
-            ]).oneTime().resize().extra());
-    }
+    return ctx.reply(message, Markup.keyboard([
+        ['💵 Extra tokens'],
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub', '⚙ Settings']
+        ]).oneTime().resize().extra());
 };
 
 const activeMemberResponseMarkdown = (ctx, message, isGetMoreToken) => {
-    if (isGetMoreToken === true) {
-        return ctx.replyWithMarkdown(message, Markup.keyboard([
-            ['💰 Balance', '👥 My referals'],
-            ['💾 My info', '❓ FAQ'],
-            ['ℹ️ About Alehub', '⚙ Settings']
-            ]).oneTime().resize().extra());
-    } else {
-        return ctx.replyWithMarkdown(message, Markup.keyboard([
-            ['💵 Get 10 more ALE-tokens'],
-            ['💰 Balance', '👥 My referals'],
-            ['💾 My info', '❓ FAQ'],
-            ['ℹ️ About Alehub', '⚙ Settings']
-            ]).oneTime().resize().extra());
-    }
+    return ctx.replyWithMarkdown(message, Markup.keyboard([
+        ['💵 Extra tokens'],
+        ['💰 Balance', '👥 My referals'],
+        ['💾 My info', '❓ FAQ'],
+        ['ℹ️ About Alehub', '⚙ Settings']
+        ]).oneTime().resize().extra());
 };
 
 const joinUserToBounty = (ctx) => {
@@ -190,7 +175,8 @@ const joinUserToBounty = (ctx) => {
         telegramNickName: ctx.session.telegramNickName,
         ethAddress: ctx.session.ethAddress,
         selectedLanguage: ctx.session.selectedLanguage,
-        referalMembers: ctx.session.referalMembers
+        referalMembers: ctx.session.referalMembers,
+        noTwitter: true
     });
 
     newMember.save()
@@ -573,6 +559,118 @@ bountyWizard.command('getMore', (ctx, next) => {
         console.log('error', error);
         return next();
     });
+});
+
+bountyWizard.hears('💵 Extra tokens', (ctx, next) => {
+    new Promise (function(resolve, reject) {
+        let botDataChat = parseBotDataChat(ctx);
+        if (botDataChat.type !== 'private') {
+            return false;
+        } else {
+            return ctx.scene.enter('getExtraTokens');
+        }
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
+});
+
+const getExtraTokensScene = new Scene('getExtraTokens');
+let extraTokensList = [{
+    id: 1,
+    title: '💬 Publish our post in your telegram channel',
+    price: 100,
+    conditions: 'Publish our post in your telegram channel',
+    timeForExecutionInHours: "Before the end of the pre-ICO",
+    isHaveScene: false,
+    telegraphLink: 'http://telegra.ph/Alehub-Publish-our-post-in-your-telegram-channel-06-01'
+}, {
+    id: 2,
+    title: '📩 Subscribe to our newsletter',
+    price: 10,
+    conditions: 'Subscribe to our newsletter',
+    timeForExecutionInHours: "Instantly",
+    isHaveScene: true,
+    sceneName: 'getMoreTokens'
+}];
+
+getExtraTokensScene.enter((ctx, next) => {
+    let extraList = [];
+    for (let i=0;i<extraTokensList.length;i++) {
+        extraList.push(extraTokensList[i].title);
+    }
+    extraList.push('🔙 Come back');
+    let botDataFrom = parseBotDataFrom(ctx);
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+        if (mongo_result[0].isGetMoreToken === true) {
+            extraList = extraList.splice(1, 1);
+            return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+        } else {
+            return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+        }
+    })
+    .catch((mongo_error) => {
+        ctx.reply('Bot error');
+        return ctx.scene.leave();
+    });
+});
+
+getExtraTokensScene.hears('🔙 Come back', (ctx) => {
+    ctx.scene.leave();
+    let botDataFrom = parseBotDataFrom(ctx);
+    Member.find({ telegramUserId: botDataFrom.id })
+    .exec()
+    .then(mongo_result => {
+        ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
+            return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].alreadyJoin.twitter.title} - ${mongo_result[0].twitterNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.telegram.title} - ${mongo_result[0].telegramNickName}\n\n${translate[ctx.session.selectedLanguage].alreadyJoin.ethereum.title} - ${mongo_result[0].ethAddress}`, mongo_result[0].isGetMoreToken);
+    })
+    .catch((mongo_error) => {
+        console.log('mongo_error', mongo_error.response.error_code);
+        return next();
+    })
+});
+
+getExtraTokensScene.hears('🔙 Back to task list', (ctx) => {
+    let extraList = [];
+    for (let i=0;i<extraTokensList.length;i++) {
+        extraList.push(extraTokensList[i].title);
+    }
+    extraList.push('🔙 Come back');
+    return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+});
+
+getExtraTokensScene.hears('✅ Do it', (ctx, next) => {
+    let selectedTusk = ctx.session.selectedTuskExtraId;
+    ctx.scene.leave();
+    if (selectedTusk.isHaveScene) {
+        return ctx.scene.enter('getMoreTokens');
+    } else {
+        ctx.reply(selectedTusk.conditions);
+        return ctx.reply(`The text of the publication can be found here: ${selectedTusk.telegraphLink}\n\nAnd write to administrator for verification @voroncov`);
+    }
+});
+
+getExtraTokensScene.on('text', (ctx, next) => {
+
+    let botDataText = parseBotDataText(ctx);
+
+    let checkIsTusk = extraTokensList.filter(item => { return item.title === botDataText });
+
+    if (checkIsTusk.length !== 0) {
+        ctx.session.selectedTuskExtraId = checkIsTusk[0];
+        return ctx.replyWithMarkdown(`*What should be done:* ${checkIsTusk[0].conditions}\n\n*Reward:* ${checkIsTusk[0].price} ALE-tokens\n\n*Time to complete the task*: ${checkIsTusk[0].timeForExecutionInHours}`, Markup.keyboard([
+            ['✅ Do it', '🔙 Back to task list']
+            ]).oneTime().resize().extra());
+    } else {
+        return ctx.reply('Please use the buttons');
+    }
+});
+
+getExtraTokensScene.on('message', (ctx) => {
+    ctx.reply('Please use the buttons');
 });
 
 // Get more tokens scene //
@@ -1564,7 +1662,7 @@ process.on('unhandledRejection', (reason, p) => {
     }
 });
 
-const stage = new Stage([bountyWizard, changeLanguageScene, changetwitterScene, changeEthereumScene, getMoreTokensScene], { default: 'bounty-wizard' });
+const stage = new Stage([bountyWizard, changeLanguageScene, changetwitterScene, changeEthereumScene, getMoreTokensScene, getExtraTokensScene], { default: 'bounty-wizard' });
 bot.use(session());
 bot.use(stage.middleware());
 bot.startPolling();
