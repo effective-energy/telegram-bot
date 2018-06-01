@@ -605,12 +605,7 @@ getExtraTokensScene.enter((ctx, next) => {
     Member.find({ telegramUserId: botDataFrom.id })
     .exec()
     .then(mongo_result => {
-        if (mongo_result[0].isGetMoreToken === true) {
-            extraList = extraList.splice(1, 1);
-            return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
-        } else {
-            return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
-        }
+        return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
     })
     .catch((mongo_error) => {
         ctx.reply('Bot error');
