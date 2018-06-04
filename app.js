@@ -23,7 +23,7 @@ let ml_campaigns = ml.campaigns;
 let ml_lists = ml.lists;
 
 const mongoose = require('mongoose');
-mongoose.connect('');
+mongoose.connect('mongodb://localhost/members');
 let db = mongoose.connection;
 db.on('error', function() {
     console.log('Error connection to MongoDB');
@@ -79,7 +79,7 @@ function isChecksumAddress (address) {
     return true;
 };
 
-let referalId = '';
+let referalId = 0;
 let botLink = '';
 let chatId = '';
 let totalTokensForBounty = '';
@@ -579,12 +579,15 @@ bountyWizard.hears('💵 Extra tokens', (ctx, next) => {
 const getExtraTokensScene = new Scene('getExtraTokens');
 let extraTokensList = [{
     id: 1,
-    title: '💬 Publish our post in your telegram channel',
+    title: '💬 Share ALEHUB on your telegram channel',
     price: 100,
-    conditions: 'Publish our post in your telegram channel',
-    timeForExecutionInHours: "Before the end of the pre-ICO",
+    conditions: '1. Minimum 500 members on your telegram channel.\n2. You must be the admin of this telegram channel.\n3. Post about ALEHUB project must be pinned until ICO start (25.07.2018)',
+    timeForExecutionInHours: "Until ICO start (25.07.2018)",
     isHaveScene: false,
-    telegraphLink: 'http://telegra.ph/Alehub-Publish-our-post-in-your-telegram-channel-06-01'
+    telegrafEng: 'http://telegra.ph/Publish-our-post-in-your-telegram-channel-06-04',
+    telegrafChn: 'http://telegra.ph/Publish-our-post-in-your-telegram-channel-06-04-2',
+    telegrafKor: 'http://telegra.ph/Publish-our-post-in-your-telegram-channel-06-04-3',
+    telegrafJap: 'http://telegra.ph/Publish-our-post-in-your-telegram-channel-06-04-4'
 }, {
     id: 2,
     title: '📩 Subscribe to our newsletter',
@@ -595,21 +598,39 @@ let extraTokensList = [{
     sceneName: 'getMoreTokens'
 }];
 
-getExtraTokensScene.enter((ctx, next) => {
-    let extraList = [];
-    for (let i=0;i<extraTokensList.length;i++) {
-        extraList.push(extraTokensList[i].title);
+getExtraTokensScene.hears('✅ Do it', (ctx, next) => {
+    let selectedTusk = ctx.session.selectedTuskExtraId;
+    ctx.scene.leave();
+    if (selectedTusk.isHaveScene) {
+        return ctx.scene.enter('getMoreTokens');
+    } else {
+        ctx.replyWithMarkdown('Publish our post in your telegram channel');
+        return ctx.replyWithMarkdown(`*How to publish?*: Get text from the links below and pin to your telegram channel.\n\nEnglish version: ${selectedTusk.telegrafEng}\nChinese version: ${selectedTusk.telegrafChn}\nKorean version: ${selectedTusk.telegrafKor}\nJapanese version: ${selectedTusk.telegrafJap}\n\nIf you have any questions please PM alehub.io bot admin: @voroncov`);
     }
-    extraList.push('🔙 Come back');
-    let botDataFrom = parseBotDataFrom(ctx);
-    Member.find({ telegramUserId: botDataFrom.id })
-    .exec()
-    .then(mongo_result => {
-        return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+});
+
+getExtraTokensScene.enter((ctx, next) => {
+    new Promise (function(resolve, reject) {
+        let botDataFrom = parseBotDataFrom(ctx);
+        Member.find({ telegramUserId: botDataFrom.id })
+        .exec()
+        .then(mongo_result => {
+            if (mongo_result[0].isGetMoreToken === true) {
+                let extraList = ['💬 Share ALEHUB on your telegram channel', '🔙 Come back'];
+                return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+            } else {
+                let extraList = ['💬 Share ALEHUB on your telegram channel', '📩 Subscribe to our newsletter', '🔙 Come back'];
+                return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+            }
+        })
+        .catch(mongo_error => {
+            ctx.reply('Bot error');
+            return ctx.scene.leave();
+        })
     })
-    .catch((mongo_error) => {
-        ctx.reply('Bot error');
-        return ctx.scene.leave();
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
     });
 });
 
@@ -629,23 +650,28 @@ getExtraTokensScene.hears('🔙 Come back', (ctx) => {
 });
 
 getExtraTokensScene.hears('🔙 Back to task list', (ctx) => {
-    let extraList = [];
-    for (let i=0;i<extraTokensList.length;i++) {
-        extraList.push(extraTokensList[i].title);
-    }
-    extraList.push('🔙 Come back');
-    return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
-});
-
-getExtraTokensScene.hears('✅ Do it', (ctx, next) => {
-    let selectedTusk = ctx.session.selectedTuskExtraId;
-    ctx.scene.leave();
-    if (selectedTusk.isHaveScene) {
-        return ctx.scene.enter('getMoreTokens');
-    } else {
-        ctx.reply(selectedTusk.conditions);
-        return ctx.reply(`The text of the publication can be found here: ${selectedTusk.telegraphLink}\n\nAnd write to administrator for verification @voroncov`);
-    }
+    new Promise (function(resolve, reject) {
+        let botDataFrom = parseBotDataFrom(ctx);
+        Member.find({ telegramUserId: botDataFrom.id })
+        .exec()
+        .then(mongo_result => {
+            if (mongo_result[0].isGetMoreToken === true) {
+                let extraList = ['💬 Publish our post in your telegram channel', '🔙 Come back'];
+                return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+            } else {
+                let extraList = ['💬 Publish our post in your telegram channel', '📩 Subscribe to our newsletter', '🔙 Come back'];
+                return ctx.reply('Available tasks:', Markup.keyboard(extraList, { columns: 1 }).oneTime().resize().extra());
+            }
+        })
+        .catch(mongo_error => {
+            ctx.reply('Bot error');
+            return ctx.scene.leave();
+        })
+    })
+    .catch ((error) => {
+        console.log('error', error.response.error_code);
+        return next();
+    });
 });
 
 getExtraTokensScene.on('text', (ctx, next) => {
@@ -656,7 +682,7 @@ getExtraTokensScene.on('text', (ctx, next) => {
 
     if (checkIsTusk.length !== 0) {
         ctx.session.selectedTuskExtraId = checkIsTusk[0];
-        return ctx.replyWithMarkdown(`*What should be done:* ${checkIsTusk[0].conditions}\n\n*Reward:* ${checkIsTusk[0].price} ALE-tokens\n\n*Time to complete the task*: ${checkIsTusk[0].timeForExecutionInHours}`, Markup.keyboard([
+        return ctx.replyWithMarkdown(`*What should be done:*\n${checkIsTusk[0].conditions}\n\n*Reward:* ${checkIsTusk[0].price} ALE-tokens\n\n*Time to complete the task*: ${checkIsTusk[0].timeForExecutionInHours}\n\n*How to publish?*: Get text from the links below and pin to your telegram channel`, Markup.keyboard([
             ['✅ Do it', '🔙 Back to task list']
             ]).oneTime().resize().extra());
     } else {
@@ -1570,7 +1596,7 @@ bountyWizard.command('/start', (ctx, next) => {
             } else {
                 if (botDataText.split('/start ')[1] === undefined) {
                     ctx.scene.leave();
-                    return ctx.reply('Write bot anything you like', Markup.removeKeyboard().extra());
+                    return ctx.reply('To start, write to bot anything you like', Markup.removeKeyboard().extra());
                 } else {
                     isDown = true;
                     referalId = botDataText;
