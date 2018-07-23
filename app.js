@@ -23,7 +23,7 @@ let ml_campaigns = ml.campaigns;
 let ml_lists = ml.lists;
 
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/members');
+mongoose.connect('');
 let db = mongoose.connection;
 db.on('error', function() {
     console.log('Error connection to MongoDB');
@@ -41,7 +41,8 @@ let membersSchema = mongoose.Schema({
     referalMembers: { type: Array, required: true },
     isGetMoreToken: { type: Boolean, required: false },
     userEmail: { type: String, required: false },
-    noTwitter: { type: Boolean, required: false }
+    noTwitter: { type: Boolean, required: false },
+    returnReferalsCount: { type: Number, required: false, default: 0}
 });
 
 let Member = mongoose.model('Member', membersSchema);
@@ -905,6 +906,11 @@ bountyWizard.hears('💰 Balance', (ctx, next) => {
                 if (mongo_result[0].isGetMoreToken !== undefined && mongo_result[0].isGetMoreToken === true) {
                     totalBalance = Number(totalBalance)+Number(10)
                 }
+                if (mongo_result[0].returnReferalsCount !== undefined) {
+                    if (mongo_result[0].returnReferalsCount !== 0) {
+                        totalBalance = Number(totalBalance+Number(mongo_result[0].returnReferalsCount*10))
+                    }
+                }
                 return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].userData.balance.title} ${totalBalance} ${translate[ctx.session.selectedLanguage].userData.balance.subtitle}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
@@ -958,6 +964,13 @@ bountyWizard.hears('👥 My referals', (ctx, next) => {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
                 let myReferalCount = 0;
                 myReferalCount = mongo_result[0].referalMembers.length;
+
+                if (mongo_result[0].returnReferalsCount !== undefined) {
+                    if (mongo_result[0].returnReferalsCount !== 0) {
+                        myReferalCount = Number(myReferalCount+Number(mongo_result[0].returnReferalsCount))
+                    }
+                }
+
                 return activeMemberResponse(ctx, `${translate[ctx.session.selectedLanguage].bounty.invite.begin} ${myReferalCount} ${translate[ctx.session.selectedLanguage].bounty.invite.middle} ${myReferalCount*10} ${translate[ctx.session.selectedLanguage].bounty.invite.end} \n\n ${translate[ctx.session.selectedLanguage].bounty.referalLink} - ${botLink}?start=${botDataFrom.id}`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
@@ -1022,15 +1035,7 @@ bountyWizard.hears('❓ FAQ', (ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                Info.find({ infoType: 'faq' })
-                .exec()
-                .then(mongo_result_info => {
-                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText, mongo_result[0].isGetMoreToken, mongo_result[0].isGetMoreToken);
-                })
-                .catch(mongo_error => {
-                    console.log('mongo_error', mongo_error.response.error_code);
-                    return next();
-                })
+                return activeMemberResponseMarkdown(ctx, `Ask: What distinguishes Alehub? from other similar projects?\nAnswer: Alehub is compatible with all world project management methodologies. Supports various methods of encryption of sensitive data to comply with the laws of developed countries. Supports multi-faceted smart contracts for interaction with trusted third parties (TTP)\n\nAsk: Is Ale coin ERC20-compliant?\nAnswer: Yes\n\nAsk: How to create an ethereum wallet?\nAnswer: visit https://www.myetherwallet.com/\n\n\nDid not find the answer to your question? Ask him in the official group - @alehub`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -1062,15 +1067,7 @@ bountyWizard.hears('ℹ️ About Alehub', (ctx, next) => {
         .then(mongo_result => {
             if (mongo_result.length !== 0) {
                 ctx.session.selectedLanguage = mongo_result[0].selectedLanguage;
-                Info.find({ infoType: 'about' })
-                .exec()
-                .then(mongo_result_info => {
-                    return activeMemberResponseMarkdown(ctx, mongo_result_info[0].infoText, mongo_result[0].isGetMoreToken);
-                })
-                .catch(mongo_error => {
-                    console.log('mongo_error', mongo_error.response.error_code);
-                    return next();
-                })
+                return activeMemberResponseMarkdown(ctx, `👥  ⁉️ WHAT IS ALEHUB? 👥\nThe ALE product is primarily a service for consumers to find counterparties for projects in the IT field and to manage these projects at the management and financial level.\n\nOn the one hand, they are programmers or their associations, and on the other hand, they are IT Customers.\n\nALE in this sense is an online distributed information and financial platform / project management system, the location and interaction of project parties (in the first stage of IT projects).\n\n👥 ALEHUB COMMUNITY 👥\n✅ Telegram chat: https://t.me/alehub\n✅ Telegram news channel: https://t.me/alehubnews\n✅ Website: https://alehub.io\n✅ Github: https://goo.gl/GoELvP\n✅ Twitter: https://goo.gl/K212vC\n✅ Instagram https://goo.gl/zq72Tq\n✅ Facebook: https://goo.gl/oDW47a\n✅ Youtube: https://goo.gl/DUQyc1\n✅ Bitcointalk ANN thread: https://goo.gl/e6QGZs\n✅ Bitcointalk Bounty thread: https://goo.gl/m3KdH1\n\n💬 OFFICIAL SUPPORT TEAM \n❗️Check the 'admin' status near the nick name:\n👨‍💻 Alexander @voroncov (bounty bot developer)\n👨‍💻 Arseniy @arsvtnk\n👨‍💻 Alexey @EcoMayDom\n👨‍💻 Evgeny @ovosol\n\n👥 ALEHUB PARTNERS 👥\n🤝 Serokell: https://goo.gl/v1fnyC\n🤝 ITMO University: https://goo.gl/XPjeLg\n🤝 Crypto b2b: https://goo.gl/HLUddx\n🤝 BEAR(R) Blockchain Experts Association: https://goo.gl/iso5bb\n\nFor any inquiries please contact us:\n📩 Marketing & PR: pr@alehub.io\n📩 Support: support@alehub.io\n📩 Bounty: bounty@alehub.io\n\n🆕  Stay tuned for more upcoming news about ALEHUB!`, mongo_result[0].isGetMoreToken);
             } else {
                 return ctx.wizard.back();
             }
@@ -1616,7 +1613,7 @@ bountyWizard.command('/start', (ctx, next) => {
     });
 });
 
-const bot = new Telegraf("");
+const bot = new Telegraf("575438259:AAEmSZNg03aIh4mBaSOtu8ang5Iu0vWVgnE");
 let index = 0;
 
 function sendMessageToTwitter (ctx, next, text, count) {
@@ -1667,7 +1664,7 @@ bot.hears(regex, (ctx, next) => {
         if (chat.type !== 'private') return false;
         if (from.username !== 'voroncov') return false;
 
-        let parseText = text.substr(6);
+        let parseText = text.substr(8);
         return getMongooseCount(ctx, next, parseText);
 });
 
